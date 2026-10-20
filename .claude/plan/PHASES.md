@@ -1,11 +1,13 @@
-# Plan — M1 Standalone MVP — 12 phases (P1–P12)
+# Plan — M1 Standalone MVP — 13 phases (P1–P13)
 
 Spec file. Never edited by the loop. Every phase ends in a gate that exits 0/non-zero; that exit code is
 what the orchestrator surfaces to the `/goal` evaluator.
 
 Source docs (read before any phase):
-- `docs/EXECUTION_PLAN.md` — §2 architecture, §3 data model, §4 extraction, §5 checks, §6 outbox.
-- `docs/adr/0001-swiftui-native.md`, `docs/adr/0002-local-storage-grdb.md`.
+- `docs/EXECUTION_PLAN.md` — §2 architecture, §3 data model, §4 extraction, §5 checks, §6 outbox,
+  §9 privacy, §10 foundation alignment and mandatory screens.
+- `docs/adr/0001-swiftui-native.md` (its table maps each foundation layer), `docs/adr/0002-local-storage-grdb.md`.
+- `.claude/rules/swift.md` for every Swift source.
 - `.claude/plan/STATE.md` — Contract block + Handoff log.
 
 Milestone in one line: on an iPhone with no server at all, a slip is scanned, read, classified and
@@ -15,11 +17,12 @@ and a WebDAV server, with deliveries that survive being offline and never duplic
 
 Exit test:
 - `./scripts/gate.sh` passes on a clean clone.
-- On a real device (by hand, recorded in P12's handoff): airplane mode on, scan three slips, classify them,
+- On a real device (by hand, recorded in P13's handoff): airplane mode on, scan three slips, classify them,
   quit the app; airplane mode off, open the app: each slip is at each enabled destination exactly once.
 - A WebDAV server that answers 500 for ten minutes, then 201: the slip arrives once, the others were not
   held up.
 - Every screen in fr-CA has no English string and no truncation at the largest Dynamic Type size.
+- `ez doctor .` passes; `ez legal check .` passes except for the lawyer review it reports as pending.
 
 Execution model: one commit per phase on `main`, message `feat(m1): P<n> <slice>`. The orchestrator
 commits and never pushes. Keep each phase in a fresh context.
@@ -43,7 +46,8 @@ commits and never pushes. Keep each phase in a fresh context.
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | sonnet | M | medium (bookmarks) |
 | P10 | WebDAV destination, probe, App Intent | sonnet | M | medium (background) |
 | P11 | Library, search, export | sonnet | M | low |
-| P12 | Privacy, accessibility, fr-CA, TestFlight v0.1.0 | sonnet | M | low |
+| P12 | Data map, legal documents, mandatory screens | sonnet | M | low |
+| P13 | Accessibility, fr-CA review, TestFlight v0.1.0 | sonnet | M | low |
 
 ## Gate commands (canonical)
 
@@ -51,18 +55,24 @@ commits and never pushes. Keep each phase in a fresh context.
   1. `swift test --package-path SlipsCore` (macOS host, no simulator)
   2. `xcodebuild -scheme Slips -destination 'platform=iOS Simulator,name=<sim from STATE>' build test`
      with `-quiet`
-  3. `scripts/check-strings.sh`: every key in `Localizable.xcstrings` has `en-CA` and `fr-CA`, no state
-     `new` or `needs_review`
+  3. `scripts/check-strings.sh`: every key in `Localizable.xcstrings` has `en` and `fr-CA`, no state
+     `new` or `needs_review`, no other locale code (`en-CA`, `fr`, `en-US` fail, as in `ez i18n-check`)
   4. `scripts/check-hygiene.sh`: no `print(` in app or core sources; no `import UIKit|SwiftUI|VisionKit`
      under `SlipsCore/Sources`; no image or PDF under `SlipsCore/Tests/Fixtures`; no 13–19 digit run in
-     sources or fixtures (card numbers)
+     sources or fixtures (card numbers); no colour literal (`Color(red:`, `#colorLiteral`, hex) in
+     `Slips/` outside `Slips/DesignSystem/`
+  5. `scripts/check-licences.sh`: every package in `Package.resolved` is in `LICENSES/THIRD-PARTY.md` with
+     an SPDX id from the `allow` list of `../_foundation/tech/licences/policy.yaml` (or a dated
+     entry in `licence-exceptions.yaml`); it reads the foundation's file, never a copy, and fails if it
+     is missing
 - No gate contacts the network except `localhost`. P10's WebDAV tests run against an in-process test
   server (`SlipsCore` test target) or a localhost container started by the gate if Docker is present;
   the gate never requires Docker.
 
 Rules for every phase:
 - Logic goes in `SlipsCore` with tests; the app target holds views, platform adapters and wiring.
-- Every user-visible string is in the String Catalog with both locales in the same commit.
+- Every user-visible string is in the String Catalog with both locales (`en`, `fr-CA`) in the same commit.
+- Company facts are never typed: they come from `ez profile` through `scripts/gen-company.sh`.
 - Migrations are append-only (`v1_initial`, `v2_…`).
 - No new Swift package beyond GRDB without naming its licence and asking.
 
@@ -75,12 +85,22 @@ Rules for every phase:
 - `Slips.xcodeproj` with folder-synchronised groups, app target `Slips` (bundle `com.etzian.slips`, iOS 18,
   iPhone only), depends on the local package. A `SlipsTests` unit target and a `SlipsUITests` target with
   one launch test.
-- `Slips/Resources/Localizable.xcstrings` with `en-CA` (development) and `fr-CA`; app name and one
+- `Slips/Resources/Localizable.xcstrings` with `en` (development language) and `fr-CA`; app name and one
   placeholder screen string.
-- `scripts/gate.sh`, `scripts/check-strings.sh`, `scripts/check-hygiene.sh` as above.
-- `.gitignore` (DerivedData, `xcuserdata`, `.build`, `.DS_Store`), `cliff.toml` copied from fin.
-- `LICENSES/THIRD-PARTY.md` listing GRDB (MIT).
-- **Gate:** `./scripts/gate.sh`.
+- `Slips/Config/Version.xcconfig` (`MARKETING_VERSION = 0.1.0`, `CURRENT_PROJECT_VERSION = 1`), used by
+  the app target (`.claude/rules/release.md`).
+- `scripts/gate.sh`, `scripts/check-strings.sh`, `scripts/check-hygiene.sh`, `scripts/check-licences.sh`
+  as above.
+- Foundation hooks: `i18n-exception.json` (`{"system": "xcstrings", "locales": ["en", "fr-CA"], "adr":
+  "docs/adr/0001-swiftui-native.md", "check": "npm run i18n:check"}`) and a `package.json` with
+  `"private": true`, no `"version"`, no dependencies, and the one script `"i18n:check":
+  "scripts/check-strings.sh"`. `ez-vendor.json` (`source` = the current `@etzianco/ui` release, `target`
+  `Slips/DesignSystem`, `map` `{"EtzianTokens.swift": "src/platforms/swift/EtzianTokens.swift"}`), then
+  `ez vendor-ui .` writes the file and its `VENDOR.json`.
+- `.gitignore` (DerivedData, `xcuserdata`, `.build`, `.DS_Store`), `cliff.toml` copied from
+  `~/etzian/_foundation/claude-plugin/skills/release/cliff.toml`.
+- `LICENSES/THIRD-PARTY.md` listing GRDB (version, `MIT`, licence text).
+- **Gate:** `./scripts/gate.sh`, then `ez doctor .` (managed copy and i18n declaration ok).
 
 ## P2 — storage and migrations
 
@@ -107,7 +127,9 @@ Rules for every phase:
 - Screens: Profiles (list, create, rename, switch active), and per profile: Businesses, Sub-categories
   (grouped by kind, seeded keys shown with their translated name, custom names allowed, archive not
   delete when used), Payment methods (name, type, last four, currency, default kind and business).
-- Settings root lists these plus Destinations (placeholder rows until P9).
+- Settings root in the order of `docs/EXECUTION_PLAN.md` §10: General, Appearance (theme), Profiles and
+  reference data, Destinations (placeholder rows until P9), Privacy, About, Danger zone (placeholders
+  until P12).
 - `SlipsCore` services with validation (last four = exactly 4 digits; name not blank; archive refused
   for `any.transfer`, `any.card_payment` as in fin).
 - **Gate:** `./scripts/gate.sh`.
@@ -207,7 +229,9 @@ Rules for every phase:
 - App Intent `SendPendingSlipsIntent` ("Send pending slips"), plus an in-app help page showing how to
   make the Shortcuts automation "When joining <home Wi-Fi> → Send pending slips → run immediately".
 - Uploads through a background `URLSession` from the file on disk.
-- Tests: against an in-process WebDAV test double (PUT/PROPFIND/MKCOL, scripted failures).
+- Tests: against an in-process WebDAV test double (PUT/PROPFIND/MKCOL, scripted failures). If the gate
+  starts a localhost WebDAV container, its port comes from `ez ports next server --app slips` and is
+  registered in `~/etzian/_foundation/tech/ports.yaml` (handoff lists that edit as a user step).
 - **Gate:** `./scripts/gate.sh`.
 
 ## P11 — library, search, export
@@ -223,17 +247,38 @@ Rules for every phase:
 - Tests: CSV escaping, FTS queries, ZIP manifest.
 - **Gate:** `./scripts/gate.sh`.
 
-## P12 — privacy, accessibility, fr-CA, v0.1.0
+## P12 — data map, legal documents, mandatory screens
 
 **Model:** sonnet. **Size:** M.
 
-- `PrivacyInfo.xcprivacy`; `docs/DATA_MAP.md` (what is stored, where, what each destination receives);
-  in-app Privacy page with the same content.
-- Optional Face ID lock (Settings), file protection classes verified.
+- `legal/data-map.yaml` written from the code (schema `~/etzian/_foundation/legal/schema/data-map.schema.yaml`,
+  `archetype: standalone`, `store_distribution: [app-store]`, permissions camera, photos, files, local
+  network; every destination and what it receives; plan §9). `ez legal gen .` writes
+  `legal/generated/`; the app bundles the privacy policy, terms and EULA in both locales, and
+  `Slips/Resources/PrivacyInfo.xcprivacy` is the generated manifest.
+- `scripts/gen-company.sh` → `Slips/Generated/Company.swift` from `ez profile --json` (legal name,
+  copyright, privacy officer title and email, support contact), header "generated, do not edit"; the gate
+  only checks the file exists, it never calls `ez`.
+- Mandatory screens of plan §10: first run (once), About (*by Etzian*, version, copyright, links to
+  `LICENSES/THIRD-PARTY.md` and the bundled documents), Privacy page (what is stored where, what each
+  destination receives, same content as the data map), optional Face ID lock, "Erase all data on this
+  iPhone" (confirmed, last in Settings). File protection classes verified.
+- Tests: erase leaves no file or row behind; first-run flag; `Company.swift` matches `ez profile --json`
+  when run by hand.
+- **Gate:** `./scripts/gate.sh`, then `ez legal check .` (only the lawyer review may be pending; the EFVP
+  transfer assessment for iCloud is listed for the user).
+
+## P13 — accessibility, fr-CA review, v0.1.0
+
+**Model:** sonnet. **Size:** M.
+
 - Accessibility: VoiceOver labels on every control, Dynamic Type up to AX5 without truncation of amounts,
-  a UI test walking capture → save with VoiceOver identifiers.
-- fr-CA review of every string (Québec terms: reçu, commerçant, sous-catégorie, mode de paiement, TPS,
-  TVQ, téléverser); non-breaking space before `:` and between amount and `$` through `FormatStyle`.
-- Version 0.1.0 (marketing) / build 1, `CHANGELOG.md` via git-cliff, archive and TestFlight upload are the
-  **user's** steps, listed in the handoff.
-- **Gate:** `./scripts/gate.sh`, plus the device exit test recorded by the user.
+  44 pt targets, Reduce Motion, a UI test walking capture → save with VoiceOver identifiers.
+  `etzian:ui-reviewer` against the behaviour contract and `.claude/rules/swift.md`.
+- fr-CA review of every string with `etzian:i18n-guardian` and `~/etzian/_foundation/i18n/glossary.fr-CA.yaml`
+  (Québec terms: reçu, commerçant, sous-catégorie, mode de paiement, TPS, TVQ, TVH, téléverser);
+  non-breaking space before `:` and between amount and `$` through `FormatStyle`.
+- `etzian:legal-compliance` over the data map and generated documents.
+- Release v0.1.0 (marketing) / build 1 with `etzian:release` (`CHANGELOG.md` via git-cliff, local tag).
+  Archive and TestFlight upload are the **user's** steps, listed in the handoff.
+- **Gate:** `./scripts/gate.sh`, `ez doctor .`, plus the device exit test recorded by the user.

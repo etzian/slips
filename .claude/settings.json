@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "additionalDirectories": ["~/etzian/_uidesign", "~/etzian/_foundation", "~/etzian/fin/docs"],
+    "deny": [],
+    "allow": [
+      "Bash(./scripts/gate.sh)",
+      "Bash(./scripts/check-strings.sh)",
+      "Bash(./scripts/check-hygiene.sh)",
+      "Bash(./scripts/check-licences.sh)",
+      "Bash(swift build *)",
+      "Bash(swift test *)",
+      "Bash(xcodebuild *)",
+      "Bash(xcrun simctl list *)",
+      "Bash(ez doctor *)",
+      "Bash(ez legal check *)",
+      "Bash(ez profile *)"
+    ]
+  }
+}

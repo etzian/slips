@@ -5,13 +5,15 @@ fin (`~/etzian/fin`) is an optional connector.
 
 | Decision | Choice |
 | --- | --- |
-| Product | **Slips** (working name), bundle id `com.etzian.slips` (same prefix as `com.etzian.clip`), repo `~/etzian/slips` |
-| Platform | iPhone, iOS 18+. iPad runs it unmodified; no iPad-specific work in v1 |
-| UI | SwiftUI, Swift 6 (ADR 0001) |
+| Product | **Slips** (working name), shown as *Slips — by Etzian* (endorsed brand, D2); repo `~/etzian/slips` |
+| Identifiers | bundle id `com.etzian.slips` (`apple.bundle_prefix` from `ez profile` + slug), iCloud container `iCloud.com.etzian.slips`, app group `group.com.etzian.slips` (M3 share extension) |
+| Platform | **iPhone only**, iOS 18+ (`TARGETED_DEVICE_FAMILY = 1`). An iPad runs it in iPhone compatibility mode; no iPad-specific work |
+| UI | SwiftUI, Swift 6 (ADR 0001, accepted: deviates from D7) on `@etzianco/ui`'s Swift tokens |
 | Storage | SQLite through GRDB, WAL (ADR 0002); PDFs on disk |
-| Locales | `en-CA`, `fr-CA` (String Catalogs) |
+| Locales | `en` (development language) and `fr-CA`, String Catalogs (ADR 0001, `i18n-exception.json`); fr-CA is a release blocker |
 | Distribution | Personal device + TestFlight first; App Store is a later decision |
-| fin | Optional connector, contract owned by fin: `../fin/docs/api/receipts-v1.md` |
+| fin | Optional connector, contract owned by fin: `../fin/docs/api/receipts-v1.md`. Slips has no account of its own; linking a profile uses the member's **fin credentials** (ADR 0003) |
+| Foundation | `~/etzian/_foundation` and `~/etzian/EXECUTION_PLAN.md` (D1–D7); how Slips meets each layer: §10 |
 
 ---
 
@@ -61,7 +63,7 @@ a slip points at them).
 
 | Table | Columns (main) |
 | --- | --- |
-| `profiles` | id, name, mode `local`/`fin`, fin_base_url, fin_workspace_id, fin_device_id, created_at |
+| `profiles` | id, name, mode `local`/`fin`, fin_base_url, fin_workspace_id, fin_device_id, fin_user_display (shown in Settings), created_at |
 | `enterprises` | id, profile_id, name, remote_id, archived_at |
 | `subcategories` | id, profile_id, kind `personal`/`family`/`enterprise`/`any`, name_key, custom_name, sort_order, remote_id, archived_at |
 | `payment_methods` | id, profile_id, name, type `credit_card`/`debit`/`chequing`/`cash`/`other`, last4, currency, default_kind, default_enterprise_id, remote_id, archived_at |
@@ -84,8 +86,9 @@ destination id; `destinations.config` never holds one.
 - Scanner: `VNDocumentCameraViewController`; pages are JPEG-compressed (quality ≈ 0.7, long edge
   ≈ 2000 px) before the PDF is built, so a two-page slip is a few hundred kB.
 - PDF: PDFKit, one page per scan page, invisible text layer from OCR so the file is searchable anywhere.
-- OCR: `VNRecognizeTextRequest`, `.accurate`, languages `fr-CA`, `en-CA`, language correction off for
-  numbers. Observations keep their bounding boxes so the parser can use line order and right-aligned
+- OCR: `VNRecognizeTextRequest`, `.accurate`, recognition languages `fr-FR` and `en-US` (Vision's own
+  codes, read from `supportedRecognitionLanguages`; they cover Québec slips; unrelated to the UI locales),
+  language correction off for numbers. Observations keep their bounding boxes so the parser can use line order and right-aligned
   amounts.
 - Parser (`SlipsCore`, pure): input is OCR lines with boxes; output is fields with a confidence and the
   source line. Rules for: dates in Québec formats (`2026-10-20`, `20/10/2026`, `20 oct. 2026`, `10/20/26`
@@ -144,8 +147,13 @@ Naming rule (per destination): tokens `{year} {month} {day} {date} {kind} {busin
 - **On device:** Foundation Models (iOS 26, Apple Intelligence devices, checked at runtime) with guided
   generation into a `@Generable` struct: merchant, date, amounts, taxes, suggested sub-category key. Input
   is the OCR text, not the image. Its output is compared with the parser's; disagreements become checks.
-- **Optional endpoint:** an Ollama URL on the LAN or a cloud key, per profile, with an explicit "what is
-  sent" screen and consent like fin's (§2.4 of fin's plan). Off by default.
+- **Optional endpoint:** an Ollama URL on the LAN (radar: Trial) or the Claude API (radar: Adopt, the
+  default cloud provider; smallest model that passes, prompts cached), per profile, with an explicit
+  "what is sent" screen and consent like fin's (§2.4 of fin's plan). Off by default. Only the OCR text is
+  sent, never the image. The key lives in the Keychain. Turning it on is a data-map change
+  (`features.ai_processing`, the provider in `_foundation/legal/vendors.yaml`) and goes through
+  `etzian:legal-compliance` before the release (Law 25: disclosure of automated processing, transfer
+  outside Québec for a cloud provider).
 - **Through fin (M4):** the slip goes to fin, fin's LLM feature re-extracts and proofs, and the phone
   shows the verdict.
 
@@ -153,8 +161,13 @@ Naming rule (per destination): tokens `{year} {month} {day} {date} {kind} {busin
 
 See `../fin/docs/RECEIPTS_CONNECTOR.md` for the server side. In Slips:
 
-- **Link:** a profile in mode `fin` is paired by scanning the QR code fin shows in Settings → Devices;
-  the app stores the device token in the Keychain.
+- **Link (ADR 0003):** "Sign in with fin" opens fin's own sign-in page in `ASWebAuthenticationSession`;
+  the member uses the **same email and password as on fin** and picks the workspace for this profile.
+  Authorization code + PKCE returns fin's device token, stored in the Keychain; Slips never sees the
+  password. A QR code from fin's Settings may fill in the server address only. Revoked or expired →
+  the fin destination goes to `needs_auth` ("Sign in to fin again"); slips stay queued.
+- **Needs from fin:** the `authorize` + `token` endpoints replacing QR pairing in `receipts-v1.md` §1
+  (ADR 0003, Consequences). When fin moves to Etzian ID, the same flow points at Etzian ID.
 - **Reference data:** pulled from fin (`GET /api/v1/device/reference`), read-only in the app, cached for
   offline use.
 - **Linking an existing local profile:** a one-time mapping screen; sub-categories map by `name_key`,
@@ -166,14 +179,55 @@ See `../fin/docs/RECEIPTS_CONNECTOR.md` for the server side. In Slips:
 
 ## 9. Privacy
 
-- Everything stays on the device unless a destination is turned on. No analytics SDK, no ad id.
-- `PrivacyInfo.xcprivacy` declares the required-reason APIs used (file timestamps, UserDefaults).
-- `docs/DATA_MAP.md`: what is stored, where, and what each destination receives.
+- Everything stays on the device unless a destination is turned on. No analytics SDK, no ad id. Every
+  optional destination and the AI endpoint are **off by default** (Law 25, privacy by default).
+- **Data map:** `legal/data-map.yaml` (schema `_foundation/legal/schema/data-map.schema.yaml`,
+  `archetype: standalone`, `store_distribution: [app-store]`): what is stored, where, for how long, and
+  what each destination receives. Permissions: `camera` (scanner), `photos` (import), `files` (Files
+  folder), local network (WebDAV on the LAN). `data_leaves_device: true` with `cloud_sync` once iCloud,
+  WebDAV or fin can be turned on.
+- **Documents are generated, never written by hand:** `ez legal gen .` writes the privacy policy, terms
+  of use and EULA (fr-CA first, then en), the retention schedule, the EFVP (data can leave the device),
+  the Apple privacy worksheet and `PrivacyInfo.xcprivacy` into `legal/generated/`. The app's manifest is
+  the generated one; required-reason APIs (file timestamps, UserDefaults) are confirmed on a release
+  build. `ez legal check .` is part of the release preflight; drafts stay drafts until the lawyer review
+  recorded in `_foundation/legal/review.yaml`.
+- **Transfers:** iCloud is Apple (`_foundation/legal/vendors.yaml`), outside Québec, so the EFVP needs
+  its transfer assessment before release. WebDAV and fin are servers the user owns; the data map says so.
 - Optional app lock with Face ID; the PDF folder uses `NSFileProtectionComplete` (`completeUntilFirstUserAuthentication`
   for the outbox files, so background uploads can read them).
 - Logs: `os.Logger`, user-derived values `.private`.
 
-## 10. Milestones
+## 10. Foundation alignment
+
+Slips follows `~/etzian/_foundation` like every Etzian app. ADR 0001 records where the Swift stack
+replaces a Rust/web default; this section says how each remaining layer applies.
+
+| Layer | Source | In Slips |
+| --- | --- | --- |
+| Company facts | `company/etzian.yaml` via `ez profile --json` | `scripts/gen-company.sh` writes `Slips/Generated/Company.swift` (legal name, copyright, privacy officer, contacts) with a "generated" header; the About and Privacy screens read it. Never typed by hand. The phone number does not appear (free app) |
+| Brand | D2, `brand.endorsement_*` | *Slips — by Etzian* on the About screen and the App Store listing; app icon from the `_uidesign` icon family (`icon/glyph.svg` + `icon/icon.json`, `npm run icons` in `_uidesign`), installed only after the user approves the glyph |
+| Design system | `@etzianco/ui` Swift export, GUIDELINES behaviour contract | `Slips/DesignSystem/EtzianTokens.swift` (managed copy, `ez-vendor.json`); SF + Dynamic Type (ADR 0001); the eight states of GUIDELINES §4 on every list |
+| i18n | `i18n/README.md`, glossary | String Catalog `en` + `fr-CA`, `i18n-exception.json`; terms from `glossary.fr-CA.yaml` (*téléverser*, *courriel*…) plus Slips terms: *reçu*, *commerçant*, *sous-catégorie*, *mode de paiement*, *TPS*, *TVQ*, *TVH*; product name never inside a sentence |
+| Licences | `tech/licences/policy.yaml` | `LICENSES/THIRD-PARTY.md` + `scripts/check-licences.sh` (ADR 0002); a restricted licence needs a dated entry in `licence-exceptions.yaml` |
+| Legal | `legal/`, `etzian:legal-pack` | §9 |
+| Changelog, versions | D6, `etzian:release` | Conventional Commits, git-cliff with the skill's `cliff.toml`; versions in `Slips/Config/Version.xcconfig` (`.claude/rules/release.md`) |
+| Ports | `tech/ports.yaml` | A localhost WebDAV test container (P10) takes its port from `ez ports next server --app slips` and is registered there |
+| Claude setup | `etzian` plugin | `CLAUDE.md`, `.claude/rules/`, `.claude/plan/`, `.claude/settings.json`; no local copies of shared agents or skills |
+
+### Mandatory screens on iPhone (`_uidesign/docs/screens.md`)
+
+| Screen | Slips |
+| --- | --- |
+| Shell | `TabView` (bottom tab bar, the `mode="bottom"` of iPhone-only apps): Library, Capture, Settings |
+| First run | One screen: name and one sentence, privacy in plain words (what stays on the phone, which destinations can send data out, all off), one button. Language is not asked: iOS sets it per app |
+| Settings | General (language opens the app's page in iOS Settings; region formats follow the system) · Appearance (theme: system, light, dark; no density on iPhone) · Profiles and reference data · Destinations · Privacy (Face ID lock, what is stored where, export) · About · Danger zone |
+| About | Icon, name, version, *by Etzian*, copyright from `Company.swift`, links to third-party licences, privacy policy, terms and EULA (the generated documents, bundled) |
+| Empty, error, offline | `ContentUnavailableView` for empty and empty-filtered; a banner for a destination in `needs_auth` or `failed`; offline shows that capture still works and how many slips wait |
+| Update available | Not needed: TestFlight and the App Store update the app |
+| Data export, erase | Export (§1, step 6); "Erase all data on this iPhone" last in Settings, confirmed, and it says that copies already delivered to destinations are not touched |
+
+## 11. Milestones
 
 | # | Milestone | Releases as |
 | --- | --- | --- |
@@ -183,7 +237,7 @@ See `../fin/docs/RECEIPTS_CONNECTOR.md` for the server side. In Slips:
 | M4 | fin connector (needs fin's receipts milestone) | v0.4.0 |
 | M5 | Release polish, App Store decision | v1.0.0 |
 
-## 11. Open questions
+## 12. Open questions
 
 1. Final product name ("Slips" is the working name); the bundle id follows it.
 2. Apple Developer Program membership: needed for TestFlight, iCloud container and background tasks on a
@@ -193,3 +247,10 @@ See `../fin/docs/RECEIPTS_CONNECTOR.md` for the server side. In Slips:
 4. Keep emailIngestion for bills that arrive by email, or fold mail import into Slips M3 / fin?
 5. Retention: should archived slips' PDFs ever be purged on the phone once delivered to N destinations?
    (Tax evidence: keep six years in Québec/Canada; the phone does not have to be where it is kept.)
+6. Legal: when the user sends a slip to their own iCloud, NAS or fin, is Etzian a processor at all, or is
+   the app only a tool? The answer shapes the privacy policy and the EFVP; add it to
+   `_foundation/legal/lawyer-brief.md`.
+7. Apple identifiers: `apple.team_id` is still blank in the company profile; the iCloud container and
+   App Group need it (P9).
+8. fin over HTTPS on the LAN: the sign-in page (ADR 0003) needs a certificate the iPhone trusts. Local CA
+   profile installed on the phone, or a real hostname with a public certificate?

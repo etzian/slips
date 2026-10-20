@@ -2,6 +2,9 @@
 
 Status: Proposed · Date: 2026-10-20 · Project: slips
 
+The radar's local-data default is SQLite via rusqlite; that is a Rust crate, so with SwiftUI (ADR 0001)
+the choice is which Swift layer sits on SQLite.
+
 ## Context
 
 Slips is local-first. The database holds profiles, reference data (businesses, categories, payment
@@ -18,7 +21,7 @@ schema mistake on a phone cannot be fixed by hand.
 | Tok | Hidden schema, macro magic | Schema in one migrations file | Model editor file |
 | Tests | Needs the app host or an in-memory container | In-memory `DatabaseQueue` in `swift test` on macOS | Needs a stack |
 | Lic | Apple SDK | **MIT** | Apple SDK |
-| Fit with house rule "no ORM that hides SQL" | No | Yes | No |
+| Fit with the radar ("ORMs: Hold", SQL stays readable) | No | Yes | No |
 
 ## Decision
 
@@ -28,7 +31,8 @@ Migrations are append-only, named `v1_…`, `v2_…`; never edit one that has sh
 
 ## Consequences
 
-- One third-party package in the app. It is recorded in `LICENSES/THIRD-PARTY.md` before the first
-  TestFlight build.
+- One third-party package in the app. It is recorded in `LICENSES/THIRD-PARTY.md` (name, version, SPDX
+  `MIT`, licence text) from P1, and `scripts/check-licences.sh` fails the gate when `Package.resolved`
+  holds a package that file does not list with a licence allowed by `_foundation/tech/licences/policy.yaml`.
 - SwiftUI observation goes through GRDB's `ValueObservation`, wrapped in `SlipsCore` so screens never
   import GRDB directly.
