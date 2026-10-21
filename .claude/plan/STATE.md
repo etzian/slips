@@ -23,11 +23,12 @@ The user's steps. `etzian:next-phase` stops while any is unchecked.
 
 - [x] ADR 0001 (SwiftUI) accepted (user, 2026-10-20: iPhone-only, so Swift)
 - [x] ADR 0002 (GRDB, MIT) accepted (user, 2026-10-20); ADR 0003 (fin sign-in) accepted the same day
-- [ ] Xcode 26 installed; record the simulator name to use in the Contract below
-- [ ] Apple Developer Program membership (needed from P9: iCloud container, background tasks, TestFlight)
+- [x] Xcode 26 installed (26.6, build 17F113); simulator recorded in the Contract below
+- [ ] iOS 26.5 simulator runtime installed (`xcodebuild -downloadPlatform iOS`, or Xcode → Settings →
+  Components); `xcrun simctl list devices available` shows an iPhone 17 on iOS 26.5
 - [x] `git init -b main` done in `~/etzian/slips`
 - [x] First commit of these plan files made (`2164337`)
-- [ ] `ez` on PATH (`~/etzian/_foundation`: `npm link`) and `NODE_AUTH_TOKEN` set, for `ez vendor-ui` in P1
+- [x] `ez` on PATH (`~/etzian/_foundation`: `npm link`) and `NODE_AUTH_TOKEN` set, for `ez vendor-ui` in P1
 
 ## Contract
 
@@ -35,7 +36,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 
 - Repo root: `.` · `SlipsCore/` Swift package (no UI imports) · `Slips/` app target · iPhone only, iOS 18+, Swift 6
 - Foundation: `~/etzian/_foundation`; ADR 0001's table says how each layer applies; Swift rules in `.claude/rules/swift.md`
-- Gate: `./scripts/gate.sh` (redirect to a file, read the tail). Simulator: `<fill in>`
+- Gate: `./scripts/gate.sh` (redirect to a file, read the tail). Simulator: `-destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5'`
 - Storage: GRDB, append-only migrations; amounts in minor units + currency; UUID ids made on device
 - Sub-category keys mirror `../fin/packages/shared/src/categories.ts`; kinds are `personal`, `family`,
   `enterprise` (+ `any` for sub-categories)
@@ -46,6 +47,9 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 - No real slip, card number or registration number anywhere in the repo; fixtures are synthetic text
 - No user-derived value in logs; secrets in the Keychain only
 - No new dependency without naming its licence and asking
+- No Apple Developer Program membership yet (user, 2026-10-20): P1–P8 use automatic signing with a
+  personal team or none, and no iCloud or background-task entitlement. P9 (iCloud container) and P13
+  (TestFlight) stop `BLOCKED` and ask the user if it is still missing
 - One commit per phase: `feat(m1): P<n> <slice>`; the orchestrator commits, never pushes
 
 ## Phases
