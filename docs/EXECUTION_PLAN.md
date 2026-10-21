@@ -166,8 +166,9 @@ See `../fin/docs/RECEIPTS_CONNECTOR.md` for the server side. In Slips:
   Authorization code + PKCE returns fin's device token, stored in the Keychain; Slips never sees the
   password. A QR code from fin's Settings may fill in the server address only. Revoked or expired →
   the fin destination goes to `needs_auth` ("Sign in to fin again"); slips stay queued.
-- **Needs from fin:** the `authorize` + `token` endpoints replacing QR pairing in `receipts-v1.md` §1
-  (ADR 0003, Consequences). When fin moves to Etzian ID, the same flow points at Etzian ID.
+- **Contract:** `receipts-v1.md` §1 (`/device/authorize`, `/api/v1/device/token`, `/api/v1/device/revoke`);
+  fin builds it in its receipts milestone (slice R2). When fin moves to Etzian ID, the same flow points
+  at Etzian ID.
 - **Reference data:** pulled from fin (`GET /api/v1/device/reference`), read-only in the app, cached for
   offline use.
 - **Linking an existing local profile:** a one-time mapping screen; sub-categories map by `name_key`,

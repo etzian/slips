@@ -1,6 +1,6 @@
 # Receipts API v1 — contract between fin and Slips
 
-Status: draft, 2026-10-20. Owned by fin; Slips keeps a copy at `docs/api/receipts-v1.md` and records the
+Status: draft, 2026-10-20; §1 sign-in with fin credentials agreed 2026-10-20. Owned by fin; Slips keeps a copy at `docs/api/receipts-v1.md` and records the
 version it targets. Server design: `docs/RECEIPTS_CONNECTOR.md`.
 
 Conventions: JSON, UTF-8, `camelCase`. Amounts are **decimal strings** with two places (`"42.17"`),
@@ -8,20 +8,47 @@ never floats. Dates `YYYY-MM-DD`; timestamps RFC 3339 UTC. Errors are `{ "error"
 HTTP status below. Breaking changes go to `/api/v2/device`; additive fields may appear in v1 and clients
 ignore unknown fields.
 
-## 1. Pairing
+## 1. Sign-in (authorization code + PKCE)
 
-### `POST /api/devices/pairing` (web session, recent authentication, CSRF)
+The phone uses the member's **fin credentials**, typed on fin's own sign-in page; it never sees the
+password. Design: Slips ADR 0003 (`~/etzian/slips/docs/adr/0003-fin-sign-in.md`); fin records it as its
+ADR 0003 in R2. The result is the same device token as before: one member, one workspace, scopes
+`reference:read receipts:write`, hashed at rest, revocable, no timer expiry.
 
-Starts a pairing. Response `201`:
+Registered client (configuration, not a table): `client_id` `slips`, redirect URI exactly
+`com.etzian.slips:/fin/callback`. Any other value is refused before a page is shown.
+
+### `GET /device/authorize` (web page, opened by the phone in `ASWebAuthenticationSession`)
+
+Query: `client_id=slips`, `redirect_uri`, `response_type=code`, `code_challenge` (base64url SHA-256, 43
+chars), `code_challenge_method=S256`, `state` (opaque, echoed), `device_name` (≤ 60 chars, e.g.
+`iPhone d'Edy`), `client` (e.g. `slips/0.4.0 (iOS 26.1)`).
+
+- No session → fin's normal sign-in page (same email and password, same lockout and rate limits), then
+  back here. A session older than the re-authentication window → `POST /api/auth/reauth` first.
+- The page names the app and device, lists the member's workspaces (one is picked) and the scopes, and
+  has **Allow** and **Cancel**.
+- Cancel → redirect `…/fin/callback?error=access_denied&state=…`. A bad `client_id` or `redirect_uri`
+  shows an error page and **never** redirects.
+
+### `POST /api/devices/authorize` (web session, recent authentication, CSRF, rate class `auth`)
+
+Called by the page on **Allow**. Request:
 
 ```json
-{ "code": "K7Q2-9XMF-4TBD", "expiresAt": "2026-10-20T23:40:00Z",
-  "qr": "fin-pair:v1?u=https%3A%2F%2Ffin.lan&c=K7Q2-9XMF-4TBD" }
+{ "clientId": "slips", "redirectUri": "com.etzian.slips:/fin/callback", "codeChallenge": "…",
+  "state": "…", "workspaceId": "uuid", "deviceName": "iPhone d'Edy", "client": "slips/0.4.0 (iOS 26.1)" }
 ```
 
-### `POST /api/v1/device/pair` (public, strict rate class)
+Response `200`: `{ "redirect": "com.etzian.slips:/fin/callback?code=…&state=…" }`. The code is random
+(256 bits), single use, valid 60 s, hashed at rest, bound to member, workspace, challenge and redirect
+URI. Errors: `400 authorize.invalid_client`, `403 permission.denied` (no `receipts` access in that
+workspace), `403 auth.reauth_required`.
 
-Request: `{ "code": "K7Q2-9XMF-4TBD", "deviceName": "iPhone d'Edy", "client": "slips/0.4.0 (iOS 26.1)" }`
+### `POST /api/v1/device/token` (public, rate class `auth`)
+
+Request: `{ "grantType": "authorization_code", "code": "…", "codeVerifier": "…",
+"redirectUri": "com.etzian.slips:/fin/callback", "clientId": "slips" }`
 
 Response `201`:
 
@@ -30,11 +57,24 @@ Response `201`:
   "user": { "id": "uuid", "displayName": "Edy" }, "scopes": ["reference:read", "receipts:write"] }
 ```
 
-Errors: `400 pairing.invalid`, `410 pairing.expired`, `429 rate_limited`.
+Errors: `400 token.invalid_grant` (unknown, used or expired code, verifier mismatch, other redirect URI:
+one code for all, so a caller cannot probe), `429 rate_limited`. A code presented twice also revokes
+the device token it produced.
+
+### `POST /api/v1/device/revoke` (device bearer)
+
+The phone signs out: revokes its own token. `204`; idempotent.
 
 ### `GET /api/devices` · `PATCH /api/devices/:id` · `DELETE /api/devices/:id` (web session)
 
-List, rename, revoke. A revoked token gets `401 device.revoked` on its next call.
+List, rename, revoke. A revoked token gets `401 device.revoked` on its next call. The list shows device
+name, client, workspace, created and last seen.
+
+### Server address
+
+The phone needs fin's base URL before it can open the page. The member types it, or scans the QR code
+in Settings → Devices, which holds **only** the address (`fin-link:v1?u=https%3A%2F%2Ffin.lan`), no
+secret. HTTPS is required: the sign-in page and the token never travel over plain HTTP.
 
 ## 2. Device routes
 

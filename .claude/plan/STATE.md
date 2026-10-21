@@ -22,11 +22,11 @@ Source docs: `docs/EXECUTION_PLAN.md`, `docs/adr/0001-swiftui-native.md`, `docs/
 The user's steps. `etzian:next-phase` stops while any is unchecked.
 
 - [x] ADR 0001 (SwiftUI) accepted (user, 2026-10-20: iPhone-only, so Swift)
-- [ ] ADR 0002 (GRDB, MIT) accepted: change its status to Accepted
+- [x] ADR 0002 (GRDB, MIT) accepted (user, 2026-10-20); ADR 0003 (fin sign-in) accepted the same day
 - [ ] Xcode 26 installed; record the simulator name to use in the Contract below
 - [ ] Apple Developer Program membership (needed from P9: iCloud container, background tasks, TestFlight)
 - [x] `git init -b main` done in `~/etzian/slips`
-- [ ] First commit of these plan files made
+- [x] First commit of these plan files made (`2164337`)
 - [ ] `ez` on PATH (`~/etzian/_foundation`: `npm link`) and `NODE_AUTH_TOKEN` set, for `ez vendor-ui` in P1
 
 ## Contract

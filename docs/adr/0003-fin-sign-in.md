@@ -1,6 +1,8 @@
 # ADR 0003 — Connecting to fin with the fin account's own credentials
 
-Status: Proposed · Date: 2026-10-20 · Project: slips
+Status: Accepted · Date: 2026-10-20 · Project: slips
+
+Accepted by the user on 2026-10-20; fin's contract updated the same day.
 
 ## Context
 
@@ -51,12 +53,13 @@ and background uploads can read it). The password never reaches Slips.
 
 ## Consequences
 
-- **fin owns the contract**, so this needs a change in fin before M4: `receipts-v1.md` §1 replaces
-  `POST /api/devices/pairing` + `POST /api/v1/device/pair` with `GET /api/v1/device/authorize` (fin's
-  sign-in page, `code_challenge`, `redirect_uri` allow-listed to Slips' scheme, workspace picker) and
-  `POST /api/v1/device/token` (code + verifier → device token, strict rate class). The rest of the
-  contract stays. ADR 0003 in fin (`RECEIPTS_CONNECTOR.md` §3) records it there. Slips' pinned copy
-  `docs/api/receipts-v1.md` is refreshed when fin publishes the change.
+- **fin owns the contract.** `receipts-v1.md` §1 (fin, 2026-10-20) replaces QR pairing with the
+  `GET /device/authorize` page, `POST /api/devices/authorize` (session, recent authentication) and
+  `POST /api/v1/device/token` (code + verifier → device token, rate class `auth`), plus
+  `POST /api/v1/device/revoke` for signing out. Client `slips`, redirect URI exactly
+  `com.etzian.slips:/fin/callback`. A password change or reset in fin revokes the member's devices.
+  fin records the server side as its own ADR 0003 in its R2 slice. Slips' pinned copy
+  `docs/api/receipts-v1.md` matches that version.
 - **HTTPS is required** for the sign-in page. A LAN fin needs a certificate the iPhone trusts (a local CA
   profile or a real name). Plan §12.
 - When fin moves to **Etzian ID**, Slips points the same flow at Etzian ID's `/authorize` with

@@ -1,6 +1,6 @@
 # ADR 0002 — Local storage: SQLite through GRDB
 
-Status: Proposed · Date: 2026-10-20 · Project: slips
+Status: Accepted · Date: 2026-10-20 · Project: slips
 
 The radar's local-data default is SQLite via rusqlite; that is a Rust crate, so with SwiftUI (ADR 0001)
 the choice is which Swift layer sits on SQLite.
