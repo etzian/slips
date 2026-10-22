@@ -1,6 +1,6 @@
 # STATE
 
-STATUS: PENDING
+STATUS: RUNNING
 <!-- PENDING | RUNNING | DONE | BLOCKED -->
 
 M1 — Standalone MVP. Spec: `.claude/plan/PHASES.md`.
@@ -55,7 +55,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 
 | # | Slice | Status |
 |---|---|---|
-| P1 | Skeleton: package, app, gate, catalogs | pending |
+| P1 | Skeleton: package, app, gate, catalogs | done |
 | P2 | Storage and migrations | pending |
 | P3 | Reference data | pending |
 | P4 | Capture: scanner → PDF on disk | pending |
@@ -71,4 +71,19 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 
 ## Handoff log
 
-_(empty)_
+### P1 — skeleton · pass · 2026-10-22 · commit HASH
+
+Attempt 1 (sonnet) passed the gate but generated the project with XcodeGen (ADR 0001: "No XcodeGen or
+Tuist"); attempt 2 (opus) removed it. Orchestrator re-ran `./scripts/gate.sh` (exit 0), `ez doctor .`
+(ok) and `scripts/check-hygiene.sh` (ok).
+
+- CHANGED: `SlipsCore/` package (Swift 6, iOS 18 / macOS 15, GRDB exact 7.11.1, one test);
+  `Slips.xcodeproj` hand-maintained (objectVersion 77, 3 synchronised root groups, iPhone only, shared
+  `Slips` scheme); `Slips/` placeholder app on `EZ` tokens; `Localizable.xcstrings` + `InfoPlist.xcstrings`
+  (en, fr-CA); `Slips/Config/Version.xcconfig` 0.1.0 / 1; `Slips/DesignSystem/` via `ez vendor-ui`
+  (@etzianco/ui 2.5.3); `SlipsTests/`, `SlipsUITests/` launch test; the four `scripts/`; `ez-vendor.json`,
+  `i18n-exception.json`, `package.json`, `cliff.toml`, `.gitignore` (+ `node_modules/`),
+  `LICENSES/THIRD-PARTY.md` (GRDB 7.11.1, MIT)
+- DECISIONS: Slips.xcodeproj/project.pbxproj is the source of truth, hand-maintained, with no generator. New files under Slips/, SlipsTests/ and SlipsUITests/ are picked up automatically; edit the pbxproj only for settings and exceptions. SlipsCore is linked into the app only; SlipsTests imports it through the host app (TEST_HOST/BUNDLE_LOADER). The app name is CFBundleDisplayName in Slips/Resources/InfoPlist.xcstrings, so Localizable.xcstrings holds only screen strings (`placeholder.title`). Set SLIPS_SIM_DESTINATION to run the gate on another simulator. THIRD-PARTY.md format: `## <package identity> <version>` then `SPDX: <id>` line (the licence check parses it; new packages need the same).
+- DEFERRED: none (attempt 1 noted: no app icon image, empty AppIcon set; Company.swift / gen-company.sh belong to P12)
+- MANUAL: none

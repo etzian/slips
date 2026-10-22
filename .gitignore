@@ -7,3 +7,4 @@ xcuserdata/
 build/
 *.ipa
 *.dSYM.zip
+node_modules/

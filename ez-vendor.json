@@ -1,0 +1,6 @@
+{
+  "$doc": "Managed copy of the Swift tokens of @etzianco/ui, hash-stamped by `ez vendor-ui .`; `ez doctor` fails on a hand edit. To upgrade, change the version in \"source\" and run ez vendor-ui.",
+  "source": "@etzianco/ui@2.5.3",
+  "target": "Slips/DesignSystem",
+  "map": { "EtzianTokens.swift": "src/platforms/swift/EtzianTokens.swift" }
+}

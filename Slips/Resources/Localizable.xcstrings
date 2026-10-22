@@ -1,0 +1,13 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "placeholder.title" : {
+      "comment" : "Placeholder screen text, replaced in P4.",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing scanned yet" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Aucun reçu numérisé pour l’instant" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,0 +1,13 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "App name shown under the icon (working name).",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Slips" } },
+        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Slips" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

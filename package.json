@@ -1,0 +1,7 @@
+{
+  "name": "slips",
+  "private": true,
+  "scripts": {
+    "i18n:check": "scripts/check-strings.sh"
+  }
+}
