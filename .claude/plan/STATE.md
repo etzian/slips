@@ -71,7 +71,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 
 ## Handoff log
 
-### P1 — skeleton · pass · 2026-10-22 · commit HASH
+### P1 — skeleton · pass · 2026-10-22 · commit f63b18c
 
 Attempt 1 (sonnet) passed the gate but generated the project with XcodeGen (ADR 0001: "No XcodeGen or
 Tuist"); attempt 2 (opus) removed it. Orchestrator re-ran `./scripts/gate.sh` (exit 0), `ez doctor .`
