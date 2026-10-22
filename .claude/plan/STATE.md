@@ -24,8 +24,7 @@ The user's steps. `etzian:next-phase` stops while any is unchecked.
 - [x] ADR 0001 (SwiftUI) accepted (user, 2026-10-20: iPhone-only, so Swift)
 - [x] ADR 0002 (GRDB, MIT) accepted (user, 2026-10-20); ADR 0003 (fin sign-in) accepted the same day
 - [x] Xcode 26 installed (26.6, build 17F113); simulator recorded in the Contract below
-- [ ] iOS 26.5 simulator runtime installed (`xcodebuild -downloadPlatform iOS`, or Xcode → Settings →
-  Components); `xcrun simctl list devices available` shows an iPhone 17 on iOS 26.5
+- [x] iOS 26.5 simulator runtime installed (26.5, 23F77); iPhone 17 on iOS 26.5 available (2026-10-22)
 - [x] `git init -b main` done in `~/etzian/slips`
 - [x] First commit of these plan files made (`2164337`)
 - [x] `ez` on PATH (`~/etzian/_foundation`: `npm link`) and `NODE_AUTH_TOKEN` set, for `ez vendor-ui` in P1
