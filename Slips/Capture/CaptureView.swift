@@ -1,3 +1,4 @@
+import PDFKit
 import PhotosUI
 import SlipsCore
 import SwiftUI
@@ -8,6 +9,7 @@ struct CaptureView: View {
     @Environment(AppModel.self) private var model
     @State private var showScanner = false
     @State private var pickerItems: [PhotosPickerItem] = []
+    @State private var showFiles = false
     @State private var phase: Phase = .idle
 
     enum Phase {
@@ -31,6 +33,9 @@ struct CaptureView: View {
                         phase = .failed(String(describing: error))
                     }
                     .ignoresSafeArea()
+                }
+                .fileImporter(isPresented: $showFiles, allowedContentTypes: [.image, .pdf], allowsMultipleSelection: true) { result in
+                    importFiles(result)
                 }
                 .onChange(of: pickerItems) { _, items in
                     guard !items.isEmpty else { return }
@@ -86,6 +91,14 @@ struct CaptureView: View {
                 }
                 .buttonStyle(.bordered)
                 .accessibilityIdentifier("capture.importImages")
+                Button {
+                    showFiles = true
+                } label: {
+                    Label("capture.importFiles", systemImage: "folder")
+                        .frame(minHeight: Metrics.minTouchTarget)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("capture.importFiles")
                 #if DEBUG
                 if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
                     // UI tests cannot drive the camera or the photo picker: a synthetic page instead.
@@ -95,6 +108,40 @@ struct CaptureView: View {
                 #endif
             }
         }
+    }
+
+    /// Images and PDFs picked in Files (On My iPhone, iCloud Drive, a File Provider app). Each PDF page
+    /// becomes a page image, so every slip goes through the same JPEG → PDF → OCR path as a scan.
+    private func importFiles(_ result: Result<[URL], any Error>) {
+        guard case .success(let urls) = result, !urls.isEmpty else {
+            if case .failure(let error) = result { phase = .failed(String(describing: error)) }
+            return
+        }
+        phase = .saving
+        Task {
+            let images = await Task.detached(priority: .userInitiated) { () -> [UIImage] in
+                urls.flatMap { url -> [UIImage] in
+                    let scoped = url.startAccessingSecurityScopedResource()
+                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                    if url.pathExtension.lowercased() == "pdf", let doc = PDFDocument(url: url) {
+                        return (0..<doc.pageCount).compactMap { doc.page(at: $0).map(Self.render) }
+                    }
+                    return (try? Data(contentsOf: url)).flatMap(UIImage.init(data:)).map { [$0] } ?? []
+                }
+            }.value
+            if images.isEmpty {
+                phase = .failed(String(localized: "capture.error.noImage"))
+            } else {
+                process(images: images)
+            }
+        }
+    }
+
+    /// A PDF page as an image at the scanner's resolution (long edge ≈ 2000 px), on white.
+    nonisolated private static func render(_ page: PDFPage) -> UIImage {
+        let bounds = page.bounds(for: .mediaBox)
+        let scale = PDFBuilder.maxLongEdge / max(bounds.width, bounds.height, 1)
+        return page.thumbnail(of: CGSize(width: bounds.width * scale, height: bounds.height * scale), for: .mediaBox)
     }
 
     private func importImages(_ items: [PhotosPickerItem]) {

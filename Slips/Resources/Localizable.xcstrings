@@ -630,6 +630,23 @@
         }
       }
     },
+    "capture.importFiles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import from Files"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer depuis Fichiers"
+          }
+        }
+      }
+    },
     "capture.importImages" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -653,13 +670,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scan a slip or a bill. It is saved on this iPhone first, before anything is sent anywhere."
+            "value" : "Scan a slip or a bill, or import images or PDFs. It is saved on this iPhone first, before anything is sent anywhere."
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Numérisez un reçu ou une facture. Il est d’abord enregistré sur cet iPhone, avant tout envoi."
+            "value" : "Numérisez un reçu ou une facture, ou importez des images ou des PDF. Il est d’abord enregistré sur cet iPhone, avant tout envoi."
           }
         }
       }
