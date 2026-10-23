@@ -4651,6 +4651,23 @@
         }
       }
     },
+    "settings.language.where %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changed in iOS Settings › Apps › %@"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se change dans Réglages › Apps › %@"
+          }
+        }
+      }
+    },
     "settings.paymentMethods" : {
       "extractionState" : "manual",
       "localizations" : {

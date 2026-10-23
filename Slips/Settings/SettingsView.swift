@@ -17,10 +17,19 @@ struct SettingsView: View {
             List {
                 Section("settings.general") {
                     Button {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                        // The app's own page in iOS Settings (Settings › Apps › Slips), where its language is chosen.
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                     } label: {
-                        LabeledContent("settings.language") {
-                            Text(Locale.current.localizedString(forLanguageCode: Locale.current.language.languageCode?.identifier ?? "") ?? "")
+                        HStack(spacing: EZ.Space.sm) {
+                            VStack(alignment: .leading, spacing: EZ.Space.xs2) {
+                                Text("settings.language").foregroundStyle(EZ.Color.text)
+                                Text("settings.language.where \(AppInfo.name)").font(.footnote).foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: EZ.Space.sm)
+                            Text(verbatim: Self.appLanguage).foregroundStyle(.secondary)
+                            Image(systemName: "arrow.up.forward.app")
+                                .foregroundStyle(.secondary)
+                                .accessibilityHidden(true)
                         }
                     }
                     .accessibilityHint(Text("settings.language.hint"))
@@ -87,6 +96,14 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    /// The language the app runs in (the catalog localisation iOS picked), named in that language.
+    static var appLanguage: String {
+        let code = Bundle.main.preferredLocalizations.first ?? Locale.current.identifier
+        let locale = Locale(identifier: code)
+        let name = locale.localizedString(forLanguageCode: locale.language.languageCode?.identifier ?? code) ?? code
+        return name.prefix(1).uppercased(with: locale) + name.dropFirst()
     }
 
     private var activeProfileName: String {
