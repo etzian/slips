@@ -53,7 +53,7 @@ public struct Exporter: Sendable {
     }
 
     /// The rows of `items`, PDF names from the default naming rule (collisions get `_{id8}`).
-    public func rows(_ items: [LibraryItem], localize: (String) -> String = { $0 }) throws -> [Row] {
+    public func rows(_ items: [LibraryEntry], localize: (String) -> String = { $0 }) throws -> [Row] {
         try database.writer.read { db in
             var used = Set<String>()
             return try items.map { item in
@@ -108,7 +108,7 @@ public struct Exporter: Sendable {
     }
 
     /// The ZIP of the PDFs and the CSV. A slip whose PDF is missing is listed in the CSV only.
-    public func zip(_ items: [LibraryItem], rows: [Row]) throws -> Data {
+    public func zip(_ items: [LibraryEntry], rows: [Row]) throws -> Data {
         var writer = ZipWriter()
         for (item, row) in Swift.zip(items, rows) {
             guard let pdf = try? files.read(item.slip.pdfPath) else { continue }

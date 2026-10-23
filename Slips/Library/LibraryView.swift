@@ -152,7 +152,7 @@ struct WaitingNote: View {
 }
 
 struct LibraryRow: View {
-    let item: LibraryItem
+    let item: LibraryEntry
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {

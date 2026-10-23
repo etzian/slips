@@ -120,7 +120,7 @@ import Testing
         #expect(Exporter.csvField("") == "")
     }
 
-    func exported() throws -> (OutboxHarness, Exporter, [LibraryItem], [Exporter.Row]) {
+    func exported() throws -> (OutboxHarness, Exporter, [LibraryEntry], [Exporter.Row]) {
         let h = try OutboxHarness()
         let shop = try ReferenceData(database: h.db).addEnterprise(profile: h.profile.id, name: "Shop, Inc")
         for (merchant, total) in [("Café \"Fictif\"", 575), ("Café \"Fictif\"", 575), ("Fake Hardware", 4367)] {

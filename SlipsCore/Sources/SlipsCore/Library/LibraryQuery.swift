@@ -32,7 +32,7 @@ public struct LibraryFilter: Sendable, Hashable {
     }
 }
 
-public struct LibraryItem: Sendable, Hashable, Identifiable {
+public struct LibraryEntry: Sendable, Hashable, Identifiable {
     public var slip: Slip
     public var delivery: DeliveryState
     public var id: UUID { slip.id }
@@ -44,7 +44,7 @@ public struct LibraryItem: Sendable, Hashable, Identifiable {
 public struct LibraryMonth: Sendable, Hashable, Identifiable {
     public var year: Int
     public var month: Int
-    public var items: [LibraryItem]
+    public var items: [LibraryEntry]
     public var id: Int { year * 100 + month }
 }
 
@@ -59,11 +59,11 @@ public struct LibraryQuery: Sendable {
         database.observe { db in Self.months(try Self.items(profile: profile, filter: filter, in: db)) }
     }
 
-    public func items(profile: UUID, filter: LibraryFilter) throws -> [LibraryItem] {
+    public func items(profile: UUID, filter: LibraryFilter) throws -> [LibraryEntry] {
         try database.writer.read { db in try Self.items(profile: profile, filter: filter, in: db) }
     }
 
-    static func items(profile: UUID, filter f: LibraryFilter, in db: Database) throws -> [LibraryItem] {
+    static func items(profile: UUID, filter f: LibraryFilter, in db: Database) throws -> [LibraryEntry] {
         var clauses = ["s.profile_id = ?"]
         var args: [any DatabaseValueConvertible] = [profile]
         if let match = ftsQuery(f.search) {
@@ -89,11 +89,11 @@ public struct LibraryQuery: Sendable {
             ORDER BY \(day) DESC, s.captured_at DESC
             """
         let rows = try Row.fetchAll(db, sql: sql, arguments: StatementArguments(args))
-        let items = try rows.map { row -> LibraryItem in
+        let items = try rows.map { row -> LibraryEntry in
             let slip = try Slip(row: row)
             let all: Int = row["n_all"], done: Int = row["n_done"], problem: Int = row["n_problem"]
             let state: DeliveryState = all == 0 ? .localOnly : problem > 0 ? .problem : done == all ? .delivered : .waiting
-            return LibraryItem(slip: slip, delivery: state)
+            return LibraryEntry(slip: slip, delivery: state)
         }
         guard let wanted = f.delivery else { return items }
         return items.filter { $0.delivery == wanted }
@@ -109,7 +109,7 @@ public struct LibraryQuery: Sendable {
         return words.map { "\"\($0)\"*" }.joined(separator: " ")
     }
 
-    static func months(_ items: [LibraryItem]) -> [LibraryMonth] {
+    static func months(_ items: [LibraryEntry]) -> [LibraryMonth] {
         var result: [LibraryMonth] = []
         for item in items {
             let d = item.day

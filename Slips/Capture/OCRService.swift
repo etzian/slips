@@ -22,7 +22,7 @@ enum OCRService {
             guard let candidate = observation.topCandidates(1).first else { return nil }
             let b = observation.boundingBox // origin bottom-left
             return OCRLine(text: candidate.string,
-                           box: NormalizedRect(x: b.minX, y: 1 - b.maxY, width: b.width, height: b.height),
+                           box: SlipsCore.NormalizedRect(x: b.minX, y: 1 - b.maxY, width: b.width, height: b.height),
                            page: index, confidence: Double(candidate.confidence))
         }
     }
