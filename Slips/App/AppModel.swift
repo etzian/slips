@@ -11,6 +11,7 @@ final class AppModel {
     let files: FileStore
     let reference: ReferenceData
     let capture: CaptureStore
+    let slips: SlipStore
     private(set) var activeProfileId: UUID?
     /// Set when the database could not be opened; the shell shows it instead of the tabs.
     private(set) var startupError: String?
@@ -24,6 +25,7 @@ final class AppModel {
         self.files = files
         self.reference = ReferenceData(database: database)
         self.capture = CaptureStore(database: database, files: files)
+        self.slips = SlipStore(database: database)
         self.defaults = defaults
         bootstrap()
     }

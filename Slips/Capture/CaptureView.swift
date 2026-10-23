@@ -54,7 +54,8 @@ struct CaptureView: View {
                 Text("capture.reading")
             }
         case .saved(let slip):
-            CaptureResultView(slip: slip) { phase = .idle }
+            ReviewView(slipId: slip.id) { phase = .idle }
+                .id(slip.id)
         case .failed(let detail):
             ErrorStateView(title: "capture.error.title", message: "capture.error.message", detail: detail) {
                 phase = .idle
@@ -140,23 +141,5 @@ struct CaptureView: View {
             }
             phase = .saved(slip)
         }
-    }
-}
-
-/// Shown once the slip is safely on disk.
-struct CaptureResultView: View {
-    let slip: Slip
-    let done: () -> Void
-
-    var body: some View {
-        ContentUnavailableView {
-            Label("capture.saved.title", systemImage: "checkmark.circle")
-        } description: {
-            Text("capture.saved.message \(slip.pageCount)")
-        } actions: {
-            Button("capture.another", action: done)
-                .buttonStyle(.borderedProminent)
-        }
-        .accessibilityIdentifier("capture.saved")
     }
 }

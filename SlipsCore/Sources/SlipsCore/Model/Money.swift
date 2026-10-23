@@ -16,6 +16,14 @@ public struct Money: Hashable, Codable, Sendable {
         Decimal(minorUnits) / Decimal(Self.scale(for: currency))
     }
 
+    /// Minor units of a decimal amount typed by the user, rounded half away from zero.
+    public static func minorUnits(from decimal: Decimal, currency: String) -> Int {
+        var scaled = decimal * Decimal(scale(for: currency))
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &scaled, 0, .plain)
+        return NSDecimalNumber(decimal: rounded).intValue
+    }
+
     static func scale(for currency: String) -> Int {
         switch currency.uppercased() {
         case "JPY", "KRW": 1

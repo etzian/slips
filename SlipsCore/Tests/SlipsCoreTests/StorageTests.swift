@@ -216,6 +216,9 @@ import Testing
 
     @Test func moneyDecimal() {
         #expect(Money(minorUnits: 1234, currency: "CAD").decimal == Decimal(string: "12.34"))
+        #expect(Money.minorUnits(from: Decimal(string: "12.345")!, currency: "CAD") == 1235)
+        #expect(Money.minorUnits(from: Decimal(string: "0.1")!, currency: "CAD") == 10)
+        #expect(Money.minorUnits(from: Decimal(string: "-2.005")!, currency: "CAD") == -201)
     }
 }
 

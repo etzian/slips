@@ -29,3 +29,8 @@ enum Metrics {
     /// Apple's minimum touch target.
     static let minTouchTarget: CGFloat = 44
 }
+
+extension Metrics {
+    /// Width of a slip thumbnail in lists and on the review screen.
+    static let thumbnailWidth: CGFloat = 72
+}

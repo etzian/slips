@@ -217,16 +217,18 @@ public struct ReferenceData: Sendable {
 
     /// Everything a picker needs for one profile, active rows only.
     public func snapshot(profile: UUID) throws -> ReferenceSnapshot {
-        try database.writer.read { db in
-            ReferenceSnapshot(
-                enterprises: try Enterprise.filter(Column("profile_id") == profile && Column("archived_at") == nil)
-                    .order(Column("name")).fetchAll(db),
-                subcategories: try Subcategory.filter(Column("profile_id") == profile && Column("archived_at") == nil)
-                    .order(Column("sort_order")).fetchAll(db),
-                paymentMethods: try PaymentMethod.filter(Column("profile_id") == profile && Column("archived_at") == nil)
-                    .order(Column("name")).fetchAll(db)
-            )
-        }
+        try database.writer.read { db in try Self.snapshot(profile: profile, in: db) }
+    }
+
+    static func snapshot(profile: UUID, in db: Database) throws -> ReferenceSnapshot {
+        ReferenceSnapshot(
+            enterprises: try Enterprise.filter(Column("profile_id") == profile && Column("archived_at") == nil)
+                .order(Column("name")).fetchAll(db),
+            subcategories: try Subcategory.filter(Column("profile_id") == profile && Column("archived_at") == nil)
+                .order(Column("sort_order")).fetchAll(db),
+            paymentMethods: try PaymentMethod.filter(Column("profile_id") == profile && Column("archived_at") == nil)
+                .order(Column("name")).fetchAll(db)
+        )
     }
 
     static func count(_ db: Database, _ sql: String, _ id: UUID) throws -> Int {

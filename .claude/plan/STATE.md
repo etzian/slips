@@ -60,7 +60,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P3 | Reference data | done |
 | P4 | Capture: scanner → PDF on disk | done |
 | P5 | OCR and parser | done |
-| P6 | Classification screen, suggestions | pending |
+| P6 | Classification screen, suggestions | done |
 | P7 | Checks | pending |
 | P8 | Outbox scheduler | pending |
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | pending |
@@ -132,7 +132,7 @@ Gate steps 1, 3, 4, 5 exit 0 (36 core tests). App sources parse-checked only.
 - DEFERRED: none
 - MANUAL: on a device, scan a two-page slip and check the PDF opens and is a few hundred kB; run `./scripts/gate.sh` on the Mac
 
-### P5 — OCR and parser · pass (Linux, xcodebuild not run) · 2026-10-23
+### P5 — OCR and parser · pass (Linux, xcodebuild not run) · 2026-10-23 · commit bb01c8a
 
 Gate steps 1, 3, 4, 5 exit 0 (45 core tests; all 27 fixtures 100 % on required fields; optional fields
 ≥ 95 %). App sources parse-checked only.
@@ -145,3 +145,16 @@ Gate steps 1, 3, 4, 5 exit 0 (45 core tests; all 27 fixtures 100 % on required f
 - DECISIONS: Fixture format: one row per line, ` | ` splits observations on a row, ` @0.3` = recogniser confidence, `---page---`. Field confidence = rule confidence × row confidence; < 0.6 is "low" (`ExtractedField.lowConfidence`). Total = largest amount on a TOTAL-like row (tip included), fallback MONTANT/AMOUNT at 0.6. HST present → GST/QST not read. Ambiguous numeric dates: the future reading loses, else 2-digit year → MM/DD/YY, 4-digit → DD/MM/YYYY at 0.5. Currency CAD at 0.7 when none printed. Registration numbers normalised `123456789 RT0001` / `1234567890 TQ0001`. `slips.extracted` = `Extraction` JSON; re-OCR of an edited slip keeps the user's values. Regex helpers are `regexMatches`/`regexFirstMatch` (NSRegularExpression; ICU needs `\x{…}` escapes).
 - DEFERRED: none
 - MANUAL: OCR quality on a real device with a few real slips (never committed); run `./scripts/gate.sh` on the Mac
+
+### P6 — classification and suggestions · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (57 core tests). App sources parse-checked only.
+
+- CHANGED: core `Classification/` (`MerchantName.normalize`, `Suggestions.suggest`, `SlipStore`:
+  suggestion, `saveDraft`, `markReady` with memory upsert + deliveries), `Money.minorUnits(from:)`;
+  app `Review/ReviewView.swift` (thumbnail, editable fields with low-confidence marks, pickers, Save /
+  Save as draft), `Review/ChecksSection.swift` (renders `slips.checks`), capture now opens the review;
+  `AppModel.slips`; 36 new catalog keys
+- DECISIONS: Pre-fill per field, first consistent source wins: card last four → payment method (+ its default kind/business) → merchant memory → profile's most recent memory row ("last used"); archived rows never suggested; suggestion only applied when the slip has no classification yet. `markReady` requires kind + sub-category (+ business when kind = enterprise) and no blocking check (`SaveError`); it clears the business for non-business kinds; deliveries are created for enabled destinations **except `library`** (the library is the slip itself), never duplicated. Check messages are catalog keys `check.<code>` filled with `Check.values` via `String(format:)`.
+- DEFERRED: none
+- MANUAL: run `./scripts/gate.sh` on the Mac
