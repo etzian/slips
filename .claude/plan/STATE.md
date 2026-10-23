@@ -1,6 +1,7 @@
 # STATE
 
 STATUS: BLOCKED
+<!-- M1 code complete; v0.0.1 internal snapshot tagged; v0.1.0 waits on membership, legal, device test -->
 <!-- PENDING | RUNNING | DONE | BLOCKED -->
 
 M1 — Standalone MVP. Spec: `.claude/plan/PHASES.md`.
@@ -303,3 +304,12 @@ English and a standard text size, so a simulator left in French or at accessibil
 Still open for M1 (P13 MANUAL): Apple Developer membership
 → iCloud entitlement; foundation legal layer → `ez legal gen .`, bundled documents,
 `PrivacyInfo.xcprivacy`, `ez legal check .`, EFVP; device exit test; `etzian:release` v0.1.0 and TestFlight.
+
+### M1 code complete · internal snapshot v0.0.1 · 2026-10-23
+
+The user decided (2026-10-23): Apple Developer membership, the lawyer's review and the device test come in
+3–4 weeks; meanwhile M1 is **code complete** and frozen as the internal snapshot **v0.0.1** (gate green on
+the Mac, `ez doctor .` ok; legal preflight not required for `v0.0.x`, see `.claude/rules/release.md`).
+`MARKETING_VERSION` 0.0.1 / build 1. Tag `v0.0.1`; branch `release/0.1` starts there and receives the
+iCloud entitlement, the generated legal documents, `PrivacyInfo.xcprivacy` and device-test fixes before
+**v0.1.0** (set `MARKETING_VERSION` back to 0.1.0 then). M2 work continues on the main line.

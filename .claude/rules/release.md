@@ -11,3 +11,13 @@ Before a release: `./scripts/gate.sh` green, `ez doctor .` and `ez legal check .
 `etzian:legal-compliance` reviews any release that changes what leaves the device.
 
 Archive, upload to TestFlight and App Store Connect are the user's steps.
+
+## Internal snapshots (`v0.0.x`)
+
+A `v0.0.x` version is an **internal snapshot**, not a release: it is never uploaded to TestFlight or
+the App Store and never given to anyone. It needs `./scripts/gate.sh` green on the Mac and `ez doctor .`;
+the legal preflight above (`ez legal check .`, generated documents, `PrivacyInfo.xcprivacy`,
+`etzian:legal-compliance`) is **not** required, because nothing reaches a user. It still gets a version
+in `Version.xcconfig`, a `CHANGELOG.md` entry and a `v0.0.x` tag. Distributing a `v0.0.x` build is not
+allowed; the first build anyone else installs is a full release (`v0.1.0` or later) with every check.
+(User decision, 2026-10-23.)
