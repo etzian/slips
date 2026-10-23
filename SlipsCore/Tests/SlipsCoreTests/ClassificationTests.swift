@@ -89,7 +89,9 @@ import Testing
 
     init() throws {
         db = try AppDatabase.inMemory()
-        store = SlipStore(database: db)
+        let files = FileStore(root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        try files.write(Data("pdf".utf8), to: "x")
+        store = SlipStore(database: db, files: files)
         profile = try db.createProfile(name: "P")
         snapshot = try ReferenceData(database: db).snapshot(profile: profile.id)
     }
@@ -151,7 +153,7 @@ import Testing
         s.subcategoryId = groceries
         #expect(throws: SaveError.classificationIncomplete) { try store.markReady(s) }
         s.kind = .personal
-        s.setChecks([Check(code: "total_missing", severity: .blocking)])
+        s.total = nil
         #expect(throws: SaveError.blockingCheck("total_missing")) { try store.markReady(s) }
         #expect(try store.slip(s.id)?.status == .draft)
     }

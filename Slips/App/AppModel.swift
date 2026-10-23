@@ -25,7 +25,7 @@ final class AppModel {
         self.files = files
         self.reference = ReferenceData(database: database)
         self.capture = CaptureStore(database: database, files: files)
-        self.slips = SlipStore(database: database)
+        self.slips = SlipStore(database: database, files: files)
         self.defaults = defaults
         bootstrap()
     }

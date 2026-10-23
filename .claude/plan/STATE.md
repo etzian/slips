@@ -61,7 +61,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P4 | Capture: scanner → PDF on disk | done |
 | P5 | OCR and parser | done |
 | P6 | Classification screen, suggestions | done |
-| P7 | Checks | pending |
+| P7 | Checks | done |
 | P8 | Outbox scheduler | pending |
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | pending |
 | P10 | WebDAV destination, probe, App Intent | pending |
@@ -146,7 +146,7 @@ Gate steps 1, 3, 4, 5 exit 0 (45 core tests; all 27 fixtures 100 % on required f
 - DEFERRED: none
 - MANUAL: OCR quality on a real device with a few real slips (never committed); run `./scripts/gate.sh` on the Mac
 
-### P6 — classification and suggestions · pass (Linux, xcodebuild not run) · 2026-10-23
+### P6 — classification and suggestions · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 0eb1843
 
 Gate steps 1, 3, 4, 5 exit 0 (57 core tests). App sources parse-checked only.
 
@@ -156,5 +156,19 @@ Gate steps 1, 3, 4, 5 exit 0 (57 core tests). App sources parse-checked only.
   Save as draft), `Review/ChecksSection.swift` (renders `slips.checks`), capture now opens the review;
   `AppModel.slips`; 36 new catalog keys
 - DECISIONS: Pre-fill per field, first consistent source wins: card last four → payment method (+ its default kind/business) → merchant memory → profile's most recent memory row ("last used"); archived rows never suggested; suggestion only applied when the slip has no classification yet. `markReady` requires kind + sub-category (+ business when kind = enterprise) and no blocking check (`SaveError`); it clears the business for non-business kinds; deliveries are created for enabled destinations **except `library`** (the library is the slip itself), never duplicated. Check messages are catalog keys `check.<code>` filled with `Check.values` via `String(format:)`.
+- DEFERRED: none
+- MANUAL: run `./scripts/gate.sh` on the Mac
+
+### P7 — checks · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (67 core tests; one test per check, firing and not firing). App sources
+parse-checked only.
+
+- CHANGED: core `Checks/SlipChecks.swift` (8 rules of plan §5 + `file_missing`, `Context`, `Code`),
+  `Check.values` typed (`CheckValue`: money, day, text, number), `SlipStore.checks(for:)` (duplicates
+  and known last fours from the database, file on disk), `saveDraft`/`markReady` store fresh checks;
+  app: checks re-run on every edit of the review screen, messages formatted per locale, "Create this
+  payment method" on `card_unknown`; 9 catalog keys
+- DECISIONS: `slips.checks` is recomputed on every save (draft or ready), never trusted from the caller; `markReady` refuses on any blocking check (`total_missing`, `file_missing`). Tax rate: |GST − round(5 % × taxable)| > 1 ¢ or |QST − round(9.975 %)| > 1 ¢ → info; taxable = subtotal, else total − taxes − tip. Duplicate = same profile, day, total and normalised merchant, other id, not archived. Date limit 2 years by default (`Context.maxAgeYears`). Check messages with values use `String(format:)` with `%@`; a message without values is shown raw (so a literal `%` is safe only there).
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac

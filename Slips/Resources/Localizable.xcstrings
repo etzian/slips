@@ -426,6 +426,74 @@
         }
       }
     },
+    "check.card_unknown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A card ending in %@ was read, but no payment method has these digits."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une carte se terminant par %@ a été lue, mais aucun mode de paiement n’a ces chiffres."
+          }
+        }
+      }
+    },
+    "check.date_future" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The date %@ is in the future."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La date du %@ est dans le futur."
+          }
+        }
+      }
+    },
+    "check.date_too_old" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The date %@ is more than %@ years ago."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La date du %@ remonte à plus de %@ ans."
+          }
+        }
+      }
+    },
+    "check.duplicate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another slip has the same merchant, date and total. It may be a duplicate."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un autre reçu a le même commerçant, la même date et le même total. Il pourrait s’agir d’un doublon."
+          }
+        }
+      }
+    },
     "check.file_missing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -439,6 +507,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le PDF de ce reçu est absent de cet iPhone. Numérisez-le de nouveau si vous avez encore le papier."
+          }
+        }
+      }
+    },
+    "check.registration_missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The supplier’s GST or QST number is missing. A business usually needs them to claim input tax credits and refunds above the thresholds; confirm with your accountant, CRA or Revenu Québec."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le numéro de TPS ou de TVQ du fournisseur est absent. Une entreprise en a habituellement besoin pour demander les crédits et remboursements de taxes au-delà des seuils; confirmez auprès de votre comptable, de l’ARC ou de Revenu Québec."
           }
         }
       }
@@ -490,6 +575,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avertissement"
+          }
+        }
+      }
+    },
+    "check.sum_mismatch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subtotal, taxes and tip add up to %@, but the total is %@."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le sous-total, les taxes et le pourboire font %@, mais le total est de %@."
+          }
+        }
+      }
+    },
+    "check.tax_rate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GST or QST does not match 5% and 9.975% of the subtotal. Normal when some items are not taxed; otherwise check the amounts."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La TPS ou la TVQ ne correspond pas à 5 % et 9,975 % du sous-total. C’est normal si certains articles ne sont pas taxés; sinon, vérifiez les montants."
+          }
+        }
+      }
+    },
+    "check.total_missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The total could not be read. Type it before saving."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le total n’a pas pu être lu. Entrez-le avant d’enregistrer."
           }
         }
       }
@@ -1680,6 +1816,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Effacer la date"
+          }
+        }
+      }
+    },
+    "review.createPaymentMethod" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create this payment method"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer ce mode de paiement"
           }
         }
       }

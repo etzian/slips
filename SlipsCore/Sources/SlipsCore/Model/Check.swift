@@ -14,14 +14,22 @@ public enum CheckSeverity: String, Codable, Sendable, Comparable {
     public static func < (a: CheckSeverity, b: CheckSeverity) -> Bool { a.rank < b.rank }
 }
 
+/// A value shown in a check's message. The app formats it (currency, date) for the user's locale.
+public enum CheckValue: Codable, Hashable, Sendable {
+    case money(Int, currency: String)
+    case day(CalendarDay)
+    case text(String)
+    case number(Int)
+}
+
 /// One finding about a slip. `code` names a catalog key in the app (`check.<code>`); `values` fill its
-/// placeholders. Stored as a JSON array in `slips.checks`.
+/// `%@` placeholders in order. Stored as a JSON array in `slips.checks`.
 public struct Check: Codable, Hashable, Sendable {
     public var code: String
     public var severity: CheckSeverity
-    public var values: [String]
+    public var values: [CheckValue]
 
-    public init(code: String, severity: CheckSeverity, values: [String] = []) {
+    public init(code: String, severity: CheckSeverity, values: [CheckValue] = []) {
         self.code = code
         self.severity = severity
         self.values = values

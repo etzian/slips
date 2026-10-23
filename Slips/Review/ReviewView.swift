@@ -15,6 +15,7 @@ struct ReviewView: View {
     @State private var profiles: [Profile] = []
     @State private var error: LocalizedStringKey?
     @State private var reload = 0
+    @State private var newPaymentMethod: PaymentMethod?
 
     var body: some View {
         Group {
@@ -31,6 +32,15 @@ struct ReviewView: View {
         .navigationBarTitleDisplayMode(.inline)
         .errorAlert($error)
         .task(id: reload) { load() }
+        .onChange(of: draft) { _, edited in
+            // Checks follow every edit.
+            guard var slip = edited, let checks = try? model.slips.checks(for: slip) else { return }
+            slip.setChecks(checks)
+            if slip != edited { draft = slip }
+        }
+        .sheet(item: $newPaymentMethod, onDismiss: refreshReference) { method in
+            NavigationStack { PaymentMethodEditor(method: method) }
+        }
     }
 
     private func form(_ slip: Binding<Slip>) -> some View {
@@ -52,7 +62,10 @@ struct ReviewView: View {
                 }
             }
 
-            ChecksSection(slip: slip.wrappedValue)
+            ChecksSection(slip: slip.wrappedValue) { last4 in
+                newPaymentMethod = PaymentMethod(profileId: slip.wrappedValue.profileId, name: "", type: .creditCard, last4: last4,
+                                                 currency: slip.wrappedValue.currency)
+            }
 
             Section("review.classification") {
                 Picker("field.profile", selection: profileBinding(slip)) {
@@ -180,6 +193,18 @@ struct ReviewView: View {
 
     // MARK: Load and save
 
+    /// After a payment method was created from a check: reload the pickers and pick the new card.
+    private func refreshReference() {
+        guard var slip = draft else { return }
+        reference = (try? model.reference.snapshot(profile: slip.profileId)) ?? reference
+        if slip.paymentMethodId == nil, let last4 = slip.extraction?.cardLast4?.value,
+           let method = reference.paymentMethods.first(where: { $0.last4 == last4 }) {
+            slip.paymentMethodId = method.id
+            if slip.kind == nil { slip.kind = method.defaultKind }
+            draft = slip
+        }
+    }
+
     private func load() {
         do {
             guard var slip = try model.slips.slip(slipId) else {
@@ -195,6 +220,7 @@ struct ReviewView: View {
                 slip.subcategoryId = s.subcategoryId
                 slip.paymentMethodId = s.paymentMethodId
             }
+            slip.setChecks(try model.slips.checks(for: slip))
             draft = slip
             state = .loaded(slip)
         } catch {
