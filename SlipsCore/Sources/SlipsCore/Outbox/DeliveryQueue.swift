@@ -136,3 +136,15 @@ extension Destination {
 
     public var keepsSidecar: Bool { config[Self.sidecarKey] == "1" }
 }
+
+extension DeliveryQueue {
+    /// Deliveries of every profile not yet done, for the App Intent's answer and the offline note.
+    public func waitingCount() throws -> Int {
+        try database.writer.read { db in
+            try Int.fetchOne(db, sql: """
+                SELECT count(*) FROM deliveries d JOIN destinations t ON t.id = d.destination_id
+                WHERE d.status != 'done' AND t.enabled = 1
+                """) ?? 0
+        }
+    }
+}

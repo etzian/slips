@@ -64,7 +64,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P7 | Checks | done |
 | P8 | Outbox scheduler | done |
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | done (iCloud entitlement waits on membership) |
-| P10 | WebDAV destination, probe, App Intent | pending |
+| P10 | WebDAV destination, probe, App Intent | done |
 | P11 | Library, search, export | pending |
 | P12 | Data map, legal documents, mandatory screens | pending |
 | P13 | Accessibility, fr-CA review, TestFlight v0.1.0 | pending |
@@ -191,7 +191,7 @@ parse-checked only.
 - DEFERRED: none
 - MANUAL: on a device, background refresh only fires after real use; run `./scripts/gate.sh` on the Mac
 
-### P9 — iCloud, Files folder, share sheet, naming · pass except the iCloud entitlement (Linux, xcodebuild not run) · 2026-10-23
+### P9 — iCloud, Files folder, share sheet, naming · pass except the iCloud entitlement (Linux, xcodebuild not run) · 2026-10-23 · commit f8d1e1e
 
 The Contract says P9 stops BLOCKED without Apple Developer membership. Everything that does not need
 the membership is built; the iCloud **entitlement** is not added (a personal team cannot sign an
@@ -209,3 +209,20 @@ iCloud container), so `ICloudAdapter.probe()` answers unreachable and iCloud row
 - DECISIONS: File names always end `.pdf`; empty folder parts are dropped; values have `/ : \ * ? " < > |` and control characters replaced by `-`; `..` cannot survive; `{total}` is `1234.56` (no grouping), `{date}` the slip's day or the capture day (UTC). A name held by a different file gets `_{id8}`; `exists` = same size and SHA-256 (and, with a sidecar, identical sidecar bytes). Re-delivery after an edit removes the previous copy only if it is still byte-identical. Folder bookmark is base64 in `config.bookmark` (+ `folder_name`); stale/refused → `needs_auth` ("choose the folder again"). The library cannot be turned off or removed. Turning a destination on queues the backlog. Selection sharing lands with the library in P11.
 - DEFERRED: iCloud entitlement (`Slips/Slips.entitlements` with `com.apple.developer.icloud-container-identifiers` = `iCloud.com.etzian.slips`, `com.apple.developer.icloud-services` = `CloudDocuments`, `com.apple.developer.ubiquity-container-identifiers`; `CODE_SIGN_ENTITLEMENTS`) once the membership exists
 - MANUAL: (user) Apple Developer membership, then the entitlement above and the container in the developer portal; a Folder destination on iCloud Drive and on one File Provider app (Dropbox, OneDrive or Google Drive) on a device, noting whether the bookmark survives a relaunch; run `./scripts/gate.sh` on the Mac
+
+### P10 — WebDAV destination and App Intent · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (114 core tests, including the exit scenario "500 for ten minutes, then
+201: delivered once, the other destination not held up"). App sources parse-checked only. No localhost
+container: the tests use an in-process WebDAV double, so no port was taken from `ez ports`.
+
+- CHANGED: core `Delivery/WebDAV.swift` (`HTTPTransport`, `WebDAVConfig` + HTTPS validation,
+  `WebDAVClient` adapter, `PropfindParser`, `URLSessionTransport`), `DeliveryQueue.waitingCount`;
+  `WebDAVTests.swift` (`FakeWebDAVServer`); app `Outbox/Keychain.swift`, `Outbox/BackgroundUploads.swift`
+  (background `URLSession` for PUT, app delegate re-attach), WebDAV in `DestinationAdapters`,
+  `Destinations/WebDAVSetupView.swift` (test connection), `Destinations/AutomationHelpView.swift`,
+  `Intents/SendPendingSlipsIntent.swift`; `Info.plist` `NSAllowsLocalNetworking`;
+  `NSLocalNetworkUsageDescription` (build setting + InfoPlist catalog); 27 catalog keys
+- DECISIONS: `exists` = PROPFIND depth 0 size check **then a GET + SHA-256 compare** when the size matches: two different slips can share a name and size (a test caught that the size alone would have skipped the second slip). Probe = health URL `GET` or `OPTIONS` base, 3 s; 2xx–3xx reachable, 401 needs_auth. MKCOL 201/405/301 ok, 409 → permanent `base_missing`; PUT from the file (background session) 200/201/204. 401 → unauthorized; 403/404/405/409/413/415 → permanent; others and network errors → transient. Plain `http` refused unless the destination has `local_network = "1"`; the ATS exception is `NSAllowsLocalNetworking` only. Password in the Keychain (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, service `com.etzian.slips.destination`, account = destination id), never in config. An upload that finishes while the app is gone is recorded by the next drain's `exists`.
+- DEFERRED: none
+- MANUAL: on a device against a real LAN WebDAV server (NAS or container): add it, airplane mode, scan, back online, check one copy; the Shortcuts automation from the help page; run `./scripts/gate.sh` on the Mac

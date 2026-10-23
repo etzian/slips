@@ -6,6 +6,11 @@
 	<array>
 		<string>com.etzian.slips.outbox</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSUbiquitousContainers</key>
 	<dict>
 		<key>iCloud.com.etzian.slips</key>

@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct SlipsApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model: AppModel
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
     @Environment(\.scenePhase) private var scenePhase

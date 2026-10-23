@@ -18,6 +18,9 @@ struct DestinationsView: View {
             .toolbar {
                 Menu {
                     Button { pickingFolder = true } label: { Label("destinations.add.folder", systemImage: "folder") }
+                    NavigationLink { WebDAVSetupView(profileId: profileId) } label: {
+                        Label("destinations.add.webdav", systemImage: "server.rack")
+                    }
                 } label: {
                     Label("destinations.add", systemImage: "plus")
                 }
@@ -57,6 +60,9 @@ struct DestinationsView: View {
                     }
                 } footer: {
                     Text("destinations.footer")
+                }
+                Section {
+                    NavigationLink("automation.title") { AutomationHelpView() }
                 }
             }
         }

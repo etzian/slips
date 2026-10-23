@@ -100,6 +100,7 @@ struct DestinationDetailView: View {
             Button("destinations.remove", role: .destructive) {
                 attempt($error) {
                     try model.destinations.remove(destination.id)
+                    Keychain.delete(destination.id)
                     removed = true
                     dismiss()
                 }

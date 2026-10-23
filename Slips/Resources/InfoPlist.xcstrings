@@ -35,6 +35,24 @@
           }
         }
       }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Local network permission prompt.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips are sent to the servers you add on your home or office network."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les reçus sont envoyés aux serveurs que vous ajoutez sur votre réseau domestique ou de bureau."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

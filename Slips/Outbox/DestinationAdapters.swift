@@ -6,7 +6,11 @@ enum DestinationAdapters {
         switch destination.type {
         case .icloud: ICloudAdapter()
         case .folder: FolderAdapter(destination: destination)
-        case .library, .webdav, .fin, .dropbox, .onedrive, .gdrive: nil
+        case .webdav:
+            WebDAVConfig(destination: destination, password: Keychain.get(destination.id) ?? "").map {
+                WebDAVClient(config: $0, transport: AppHTTPTransport(), localize: catalogLocalize)
+            }
+        case .library, .fin, .dropbox, .onedrive, .gdrive: nil
         }
     }
 }
