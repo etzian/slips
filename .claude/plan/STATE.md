@@ -297,6 +297,9 @@ fixture 28) and 9-digit GST numbers; Cancel on the review screen (discard the ne
 
 fr-CA walk-through in the simulator: renders fine (user, 2026-10-23).
 
+Gate re-run on the Mac at `f7a7b6b` (after the legal-assessment fixes): **GATE OK**. The UI tests now pin
+English and a standard text size, so a simulator left in French or at accessibility sizes does not fail them.
+
 Still open for M1 (P13 MANUAL): Apple Developer membership
 → iCloud entitlement; foundation legal layer → `ez legal gen .`, bundled documents,
 `PrivacyInfo.xcprivacy`, `ez legal check .`, EFVP; device exit test; `etzian:release` v0.1.0 and TestFlight.
