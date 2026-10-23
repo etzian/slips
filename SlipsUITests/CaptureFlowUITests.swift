@@ -5,7 +5,10 @@ final class CaptureFlowUITests: XCTestCase {
     @MainActor
     func testCaptureReviewSave() {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting", "-AppleLanguages", "(en)", "-AppleLocale", "en_CA"]
+        // Pinned language and text size: the simulator's own settings (French, accessibility sizes for a
+        // manual check) must not change what the test taps.
+        app.launchArguments = ["-uiTesting", "-AppleLanguages", "(en)", "-AppleLocale", "en_CA",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
 
         app.tabBars.buttons.element(boundBy: 1).tap()
@@ -37,7 +40,8 @@ final class CaptureFlowUITests: XCTestCase {
     @MainActor
     func testFirstRunShowsOnce() {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting", "-firstRun"]
+        app.launchArguments = ["-uiTesting", "-firstRun", "-AppleLanguages", "(en)",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         let start = app.buttons["firstRun.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 10))
