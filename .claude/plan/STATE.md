@@ -295,6 +295,8 @@ and PDFs) and "Open in…" document types; no empty catalog key, `CFBundleDispla
 declared; totals reconciliation for receipts whose amount column is offset from its labels (synthetic
 fixture 28) and 9-digit GST numbers; Cancel on the review screen (discard the new draft or close).
 
-Still open for M1 (P13 MANUAL): fr-CA walk-through at AX5 in the simulator; Apple Developer membership
+fr-CA walk-through in the simulator: renders fine (user, 2026-10-23).
+
+Still open for M1 (P13 MANUAL): Apple Developer membership
 → iCloud entitlement; foundation legal layer → `ez legal gen .`, bundled documents,
 `PrivacyInfo.xcprivacy`, `ez legal check .`, EFVP; device exit test; `etzian:release` v0.1.0 and TestFlight.
