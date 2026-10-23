@@ -37,6 +37,11 @@ struct CaptureView: View {
                 .fileImporter(isPresented: $showFiles, allowedContentTypes: [.image, .pdf], allowsMultipleSelection: true) { result in
                     importFiles(result)
                 }
+                .onChange(of: model.openedFiles, initial: true) { _, urls in
+                    guard !urls.isEmpty else { return }
+                    model.openedFiles = []
+                    importFiles(.success(urls))
+                }
                 .onChange(of: pickerItems) { _, items in
                     guard !items.isEmpty else { return }
                     pickerItems = []
@@ -122,7 +127,11 @@ struct CaptureView: View {
             let images = await Task.detached(priority: .userInitiated) { () -> [UIImage] in
                 urls.flatMap { url -> [UIImage] in
                     let scoped = url.startAccessingSecurityScopedResource()
-                    defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                    defer {
+                        if scoped { url.stopAccessingSecurityScopedResource() }
+                        // "Open in" copies land in Documents/Inbox; the slip keeps its own PDF.
+                        if url.path.contains("/Documents/Inbox/") { try? FileManager.default.removeItem(at: url) }
+                    }
                     if url.pathExtension.lowercased() == "pdf", let doc = PDFDocument(url: url) {
                         return (0..<doc.pageCount).compactMap { doc.page(at: $0).map(Self.render) }
                     }

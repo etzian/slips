@@ -63,6 +63,10 @@ final class AppModel {
         }
     }
 
+    /// Images and PDFs another app (or a drop on the simulator) asked us to open; the capture screen
+    /// imports them and empties the list.
+    var openedFiles: [URL] = []
+
     /// The running app's model, for the background task handler (registered before any view exists).
     static var current: AppModel?
 

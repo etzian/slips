@@ -34,6 +34,11 @@ struct RootView: View {
                     LockView { Task { if await AppLock.authenticate() { locked = false } } }
                 }
             }
+            .onOpenURL { url in
+                guard url.isFileURL else { return }
+                model.openedFiles.append(url)
+                tab = .capture
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background && lockOn { locked = true }
             }
