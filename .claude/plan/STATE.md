@@ -67,7 +67,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P10 | WebDAV destination, probe, App Intent | done |
 | P11 | Library, search, export | done |
 | P12 | Data map, legal documents, mandatory screens | done except generated legal documents (foundation's `ez legal` missing) |
-| P13 | Accessibility, fr-CA review, TestFlight v0.1.0 | blocked (release preconditions are the user's) |
+| P13 | Accessibility, fr-CA review, TestFlight v0.1.0 | blocked (release preconditions are the user's; gate and doctor now pass) |
 
 ## Handoff log
 
@@ -264,7 +264,7 @@ hand. Everything else is in. Gate steps 1, 3, 4, 5 exit 0 (126 core tests). App 
 - DEFERRED: `legal/generated/*`, bundling them, `PrivacyInfo.xcprivacy` and `ez legal check .` — waiting on the foundation's legal layer (its P6)
 - MANUAL: (user) build the foundation legal layer or run `ez legal gen .` from a foundation that has it; validate `legal/data-map.yaml` against the schema; EFVP transfer assessment for iCloud (Apple, outside Québec); `scripts/gen-company.sh --check` against your local `ez`; run `./scripts/gate.sh` on the Mac
 
-### P13 — accessibility, fr-CA review, v0.1.0 · blocked · 2026-10-23
+### P13 — accessibility, fr-CA review, v0.1.0 · blocked · 2026-10-23 · commit ae74d3b
 
 Accessibility and the fr-CA review are done; the release is not cut. `.claude/rules/release.md`
 requires, before a release: `./scripts/gate.sh` green (the xcodebuild step has never run: no Mac in
@@ -283,3 +283,18 @@ Apple Developer membership. Tagging `v0.1.0` before those would be a release tha
 - DECISIONS: `etzian:ui-reviewer`, `etzian:i18n-guardian` and `etzian:legal-compliance` were not available in this session; the reviews above were done by hand against `.claude/rules/swift.md` and the GUIDELINES behaviour contract, and should be re-run with the agents.
 - DEFERRED: release v0.1.0 (`etzian:release`: CHANGELOG via git-cliff, local tag), archive and TestFlight upload
 - MANUAL: (user) 1. On the Mac: `./scripts/gate.sh` — the first type-check of every app source written in this session; fix what Xcode reports. 2. `ez doctor .`. 3. Apple Developer membership → iCloud entitlement (P9 DEFERRED). 4. Foundation legal layer → `ez legal gen .`, bundle the documents, `PrivacyInfo.xcprivacy`, `ez legal check .`, EFVP iCloud transfer assessment, `etzian:legal-compliance`. 5. `etzian:ui-reviewer` and `etzian:i18n-guardian`. 6. Device exit test: airplane mode, scan three slips, classify, quit; airplane off, open: each slip at each enabled destination exactly once; every fr-CA screen at AX5. 7. Then `etzian:release` v0.1.0, archive, TestFlight.
+
+### Mac verification · 2026-10-23 · after commit 99fc921
+
+The user ran on the Mac (Xcode 26.6, iPhone 17 / iOS 26.5): `./scripts/gate.sh` → **GATE OK** (all five
+steps, including `xcodebuild build test`: app unit tests and UI tests) and `ez doctor .` → ok (design
+copy @etzianco/ui 2.5.3, i18n xcstrings en + fr-CA). P2–P12 now pass the real gate, not only its Linux
+steps. Fixes found while running in the simulator (pushed to `m1-standalone-mvp`): `LibraryItem` →
+`LibraryEntry` and `SlipsCore.NormalizedRect` (Apple framework name clashes); Import from Files (images
+and PDFs) and "Open in…" document types; no empty catalog key, `CFBundleDisplayName`/`CFBundleName`
+declared; totals reconciliation for receipts whose amount column is offset from its labels (synthetic
+fixture 28) and 9-digit GST numbers; Cancel on the review screen (discard the new draft or close).
+
+Still open for M1 (P13 MANUAL): fr-CA walk-through at AX5 in the simulator; Apple Developer membership
+→ iCloud entitlement; foundation legal layer → `ez legal gen .`, bundled documents,
+`PrivacyInfo.xcprivacy`, `ez legal check .`, EFVP; device exit test; `etzian:release` v0.1.0 and TestFlight.
