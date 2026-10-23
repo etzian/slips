@@ -6,6 +6,8 @@ public enum SaveError: Error, Equatable, Sendable {
     case blockingCheck(String)
     /// Kind and sub-category are needed to file the slip; a business slip also needs its business.
     case classificationIncomplete
+    /// Only a draft without deliveries can be discarded.
+    case notADraft
 }
 
 /// Reading and saving slips after capture.
@@ -59,6 +61,21 @@ public struct SlipStore: Sendable {
             return Suggestions.suggest(cardLast4: slip.extraction?.cardLast4?.value, merchant: slip.merchant,
                                        reference: reference, memory: memory, lastUsed: lastUsed)
         }
+    }
+
+    /// Throws away a capture the user cancelled: its row and its files. Only a draft with no delivery
+    /// can go; a filed slip is never deleted this way.
+    public func discardDraft(_ id: UUID) throws {
+        let profile = try database.writer.write { db -> UUID? in
+            guard let slip = try Slip.fetchOne(db, id: id) else { return nil }
+            guard slip.status == .draft, try Delivery.filter(Column("slip_id") == id).fetchCount(db) == 0 else {
+                throw SaveError.notADraft
+            }
+            try slip.delete(db)
+            return slip.profileId
+        }
+        // Row first, then the file: a crash in between leaves an orphan folder, which the sweep removes.
+        if let profile { try files.removeSlip(profile: profile, slip: id) }
     }
 
     /// Saves the fields without filing: a draft stays a draft and gets no delivery.

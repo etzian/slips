@@ -64,7 +64,7 @@ struct CaptureView: View {
                 Text("capture.reading")
             }
         case .saved(let slip):
-            ReviewView(slipId: slip.id) { phase = .idle }
+            ReviewView(slipId: slip.id, cancel: .discardCapture) { phase = .idle }
                 .id(slip.id)
         case .failed(let detail):
             ErrorStateView(title: "capture.error.title", message: "capture.error.message", detail: detail) {

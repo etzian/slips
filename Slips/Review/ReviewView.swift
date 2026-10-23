@@ -6,7 +6,11 @@ import SwiftUI
 /// pickers. Save files the slip and queues its deliveries; Save as draft keeps it here.
 struct ReviewView: View {
     let slipId: UUID
+    /// What Cancel does: right after a capture it discards the new draft; when editing, it closes.
+    var cancel: CancelAction = .close
     let onDone: () -> Void
+
+    enum CancelAction { case discardCapture, close }
 
     @Environment(AppModel.self) private var model
     @State private var state: Loadable<Slip> = .loading
@@ -16,6 +20,7 @@ struct ReviewView: View {
     @State private var error: LocalizedStringKey?
     @State private var reload = 0
     @State private var newPaymentMethod: PaymentMethod?
+    @State private var confirmDiscard = false
 
     var body: some View {
         Group {
@@ -44,6 +49,17 @@ struct ReviewView: View {
             guard var slip = edited, let checks = try? model.slips.checks(for: slip) else { return }
             slip.setChecks(checks)
             if slip != edited { draft = slip }
+        }
+        .confirmationDialog("review.discard.title", isPresented: $confirmDiscard, titleVisibility: .visible) {
+            Button("review.discard.action", role: .destructive) {
+                attempt($error) {
+                    try model.slips.discardDraft(slipId)
+                    onDone()
+                }
+            }
+            Button("review.discard.keepDraft") { onDone() }
+        } message: {
+            Text("review.discard.message")
         }
         .sheet(item: $newPaymentMethod, onDismiss: refreshReference) { method in
             NavigationStack { PaymentMethodEditor(method: method) }
@@ -148,6 +164,12 @@ struct ReviewView: View {
                     Text("review.saveDraft").frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
                 }
                 .accessibilityIdentifier("review.saveDraft")
+                Button(role: cancel == .discardCapture ? .destructive : nil) {
+                    if cancel == .discardCapture { confirmDiscard = true } else { onDone() }
+                } label: {
+                    Text("action.cancel").frame(maxWidth: .infinity, minHeight: Metrics.minTouchTarget)
+                }
+                .accessibilityIdentifier("review.cancel")
             }
             .listRowBackground(Color.clear)
         }

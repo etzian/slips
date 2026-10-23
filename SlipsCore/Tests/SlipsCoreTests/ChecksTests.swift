@@ -117,3 +117,25 @@ import Testing
         #expect(try store.slip(s.id)?.decodedChecks.map(\.code) == ["file_missing", "total_missing"])
     }
 }
+
+@Suite struct DiscardDraftTests {
+    @Test func cancelledCaptureLeavesNothingAndFiledSlipsAreRefused() throws {
+        let db = try AppDatabase.inMemory()
+        let files = FileStore(root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        let profile = try db.createProfile(name: "P")
+        let capture = CaptureStore(database: db, files: files)
+        let store = SlipStore(database: db, files: files)
+
+        let draft = try capture.save(pdf: Data("%PDF".utf8), pageCount: 1, profile: profile.id)
+        try store.discardDraft(draft.id)
+        #expect(try store.slip(draft.id) == nil)
+        #expect(!files.exists(draft.pdfPath))
+        try store.discardDraft(draft.id) // already gone: no error
+
+        var filed = try capture.save(pdf: Data("%PDF 2".utf8), pageCount: 1, profile: profile.id)
+        filed.status = .ready
+        try db.writer.write { [filed] in try filed.update($0) }
+        #expect(throws: SaveError.notADraft) { try store.discardDraft(filed.id) }
+        #expect(files.exists(filed.pdfPath))
+    }
+}

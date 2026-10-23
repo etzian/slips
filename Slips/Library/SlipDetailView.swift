@@ -25,7 +25,6 @@ struct SlipDetailView: View {
             .sheet(isPresented: $editing) {
                 NavigationStack {
                     ReviewView(slipId: slipId) { editing = false }
-                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("action.cancel") { editing = false } } }
                 }
             }
             .errorAlert($error)
