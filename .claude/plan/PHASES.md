@@ -21,8 +21,7 @@ Exit test:
   called). Endpoint on: only the OCR text with card digits masked is sent, never the image.
 - Consent withdrawn in one tap: provider off, key forgotten.
 
-Execution model: one commit per phase on the main line (`m1-standalone-mvp` branch until the user
-renames it), message `feat(m2): P<n> <slice>`. Internal snapshot `v0.0.2` at the end. M2's public
+Execution model: one commit per phase on `main`, message `feat(m2): P<n> <slice>`. Internal snapshot `v0.0.2` at the end. M2's public
 release (`v0.2.0`) comes after `v0.1.0` and needs the legal review of `features.ai_processing`.
 
 ## Model per phase
