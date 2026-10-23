@@ -50,14 +50,16 @@ final class AppModel {
             // An in-memory database cannot fail to open.
             return AppModel(database: try! AppDatabase.inMemory(), files: FileStore(root: tmp), defaults: defaults)
         }
-        let support = (try? fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
-            ?? fm.temporaryDirectory
         do {
+            // Never fall back to the temporary folder: iOS may purge it, and slips would be lost.
+            let support = try fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             let db = try AppDatabase.onDisk(directory: support)
             return AppModel(database: db, files: FileStore(root: support))
         } catch {
             log.error("database open failed: \(String(describing: error), privacy: .private)")
-            let model = AppModel(database: try! AppDatabase.inMemory(), files: FileStore(root: support))
+            // The shell shows the startup error and nothing else, so nothing is ever written here.
+            let model = AppModel(database: try! AppDatabase.inMemory(),
+                                 files: FileStore(root: fm.temporaryDirectory.appendingPathComponent("unavailable")))
             model.startupError = String(describing: error)
             return model
         }
@@ -86,6 +88,7 @@ final class AppModel {
             }
             let stored = defaults.string(forKey: Self.activeProfileKey).flatMap(UUID.init(uuidString:))
             activeProfileId = profiles.first { $0.id == stored }?.id ?? profiles.first?.id
+            ExportFiles.purge()
             // Before capture is offered: drop files of captures killed before their row, flag lost files.
             let report = try capture.sweep()
             if report.orphanFoldersRemoved + report.rowsMissingFile > 0 {

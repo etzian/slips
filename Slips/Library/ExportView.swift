@@ -72,12 +72,21 @@ struct ExportView: View {
         .navigationTitle(Text("library.export"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("action.done") { dismiss() } } }
-        .onChange(of: format) { file = nil }
-        .onChange(of: from) { file = nil }
-        .onChange(of: to) { file = nil }
+        .onChange(of: format) { discard() }
+        .onChange(of: from) { discard() }
+        .onChange(of: to) { discard() }
+        // The share sheet has copied the file by the time this screen closes.
+        .onDisappear { discard() }
+    }
+
+    /// Deletes the export made on this screen, if any.
+    private func discard() {
+        if case .loaded(let url)? = file { ExportFiles.remove(url) }
+        file = nil
     }
 
     private func make() async {
+        discard()
         file = .loading
         var f = filter
         f.from = from
@@ -95,7 +104,7 @@ struct ExportView: View {
                 case .json: data = try Exporter.json(rows)
                 case .zip: data = try exporter.zip(items, rows: rows)
                 }
-                let dir = FileManager.default.temporaryDirectory.appendingPathComponent("export-\(UUID().uuidString)")
+                let dir = ExportFiles.newFolder()
                 try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
                 let stamp = CalendarDay(Date()).iso
                 let url = dir.appendingPathComponent("slips-\(stamp).\(format.rawValue)")
@@ -106,6 +115,30 @@ struct ExportView: View {
             file = .loaded(url)
         } catch {
             file = .failed(String(describing: error))
+        }
+    }
+}
+
+/// Exports live in their own folders under the temporary directory, only while the export screen is
+/// open; anything left behind (the app was killed) is deleted at the next launch.
+enum ExportFiles {
+    static let prefix = "export-"
+
+    static func newFolder() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(prefix + UUID().uuidString, isDirectory: true)
+    }
+
+    static func remove(_ file: URL) {
+        let folder = file.deletingLastPathComponent()
+        guard folder.lastPathComponent.hasPrefix(prefix) else { return }
+        try? FileManager.default.removeItem(at: folder)
+    }
+
+    static func purge() {
+        let tmp = FileManager.default.temporaryDirectory
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: tmp.path)) ?? []
+        for name in names where name.hasPrefix(prefix) {
+            try? FileManager.default.removeItem(at: tmp.appendingPathComponent(name))
         }
     }
 }

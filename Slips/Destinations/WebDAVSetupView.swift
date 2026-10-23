@@ -28,6 +28,11 @@ struct WebDAVSetupView: View {
                     .autocorrectionDisabled()
                 if let problem { Text(problem).font(.footnote).foregroundStyle(EZ.Color.error) }
                 Toggle("webdav.localNetwork", isOn: $localNetwork)
+                if isPlainHTTP {
+                    Label("webdav.plainHTTP.warning", systemImage: "exclamationmark.triangle")
+                        .font(.footnote)
+                        .foregroundStyle(EZ.Color.warning)
+                }
             } footer: {
                 Text("webdav.localNetwork.footer")
             }
@@ -69,6 +74,11 @@ struct WebDAVSetupView: View {
             }
         }
         .errorAlert($error)
+    }
+
+    /// An `http://` address: the password and the slips cross the network unencrypted.
+    private var isPlainHTTP: Bool {
+        address.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("http://")
     }
 
     private func config() -> WebDAVConfig? {

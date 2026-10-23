@@ -5569,6 +5569,23 @@
         }
       }
     },
+    "webdav.plainHTTP.warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This address is not encrypted: the password and the slips can be read by anyone on this network. Use https:// if the server supports it."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette adresse n’est pas chiffrée : le mot de passe et les reçus peuvent être lus par quiconque sur ce réseau. Utilisez https:// si le serveur le permet."
+          }
+        }
+      }
+    },
     "webdav.problem.insecure" : {
       "extractionState" : "manual",
       "localizations" : {
