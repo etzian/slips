@@ -18,6 +18,24 @@
         }
       }
     },
+    "CFBundleName" : {
+      "comment" : "Bundle name (working name).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips"
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription" : {
       "comment" : "Camera permission prompt.",
       "extractionState" : "manual",

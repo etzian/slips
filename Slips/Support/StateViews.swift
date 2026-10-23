@@ -67,7 +67,7 @@ struct TextPrompt: Identifiable {
 
 extension View {
     func textPrompt(_ prompt: Binding<TextPrompt?>) -> some View {
-        alert(prompt.wrappedValue?.title ?? "", isPresented: Binding(
+        alert(prompt.wrappedValue.map { Text($0.title) } ?? Text(verbatim: ""), isPresented: Binding(
             get: { prompt.wrappedValue != nil },
             set: { if !$0 { prompt.wrappedValue = nil } }
         ), presenting: prompt.wrappedValue) { p in
@@ -88,7 +88,7 @@ extension View {
         )) {
             Button("action.ok", role: .cancel) {}
         } message: {
-            Text(error.wrappedValue ?? "")
+            error.wrappedValue.map { Text($0) } ?? Text(verbatim: "")
         }
     }
 }
