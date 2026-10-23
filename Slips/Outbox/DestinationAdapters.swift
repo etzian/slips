@@ -4,8 +4,9 @@ import SlipsCore
 enum DestinationAdapters {
     @Sendable static func make(_ destination: Destination) -> (any DestinationAdapter)? {
         switch destination.type {
-        case .library, .icloud, .folder, .webdav, .fin, .dropbox, .onedrive, .gdrive:
-            nil
+        case .icloud: ICloudAdapter()
+        case .folder: FolderAdapter(destination: destination)
+        case .library, .webdav, .fin, .dropbox, .onedrive, .gdrive: nil
         }
     }
 }

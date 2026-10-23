@@ -238,8 +238,9 @@ public actor Outbox {
         guard let data = try? Data(contentsOf: url) else { throw DeliveryError.permanent("file_missing") }
         let sha = Hashing.sha256Hex(data)
         guard sha == slip.pdfSha256 else { throw DeliveryError.permanent("hash_mismatch") }
+        let labels = try database.writer.read { db in try SlipLabels.resolve(for: slip, in: db) }
         return DeliveryItem(slip: slip, destination: destination, pdfURL: url, sha256: sha, byteCount: data.count,
-                            previousRef: row.remoteRef.map(RemoteRef.init))
+                            previousRef: row.remoteRef.map(RemoteRef.init), labels: labels)
     }
 
     func markDone(_ row: Delivery, ref: RemoteRef, sha: String) throws {

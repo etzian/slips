@@ -13,6 +13,7 @@ final class AppModel {
     let capture: CaptureStore
     let slips: SlipStore
     let deliveries: DeliveryQueue
+    let destinations: DestinationStore
     let scheduler: DeliveryScheduler
     private(set) var activeProfileId: UUID?
     /// Set when the database could not be opened; the shell shows it instead of the tabs.
@@ -29,6 +30,7 @@ final class AppModel {
         self.capture = CaptureStore(database: database, files: files)
         self.slips = SlipStore(database: database, files: files)
         self.deliveries = DeliveryQueue(database: database)
+        self.destinations = DestinationStore(database: database)
         self.scheduler = DeliveryScheduler(database: database, files: files, adapters: DestinationAdapters.make)
         self.defaults = defaults
         bootstrap()

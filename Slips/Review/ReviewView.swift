@@ -30,6 +30,13 @@ struct ReviewView: View {
         }
         .navigationTitle(Text("review.title"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let slip = draft {
+                ShareLink(item: model.files.url(for: slip.pdfPath)) {
+                    Label("action.share", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
         .errorAlert($error)
         .task(id: reload) { load() }
         .onChange(of: draft) { _, edited in

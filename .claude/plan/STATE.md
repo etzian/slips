@@ -63,7 +63,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P6 | Classification screen, suggestions | done |
 | P7 | Checks | done |
 | P8 | Outbox scheduler | done |
-| P9 | Destinations: iCloud, Files folder, share sheet, naming rule | pending |
+| P9 | Destinations: iCloud, Files folder, share sheet, naming rule | done (iCloud entitlement waits on membership) |
 | P10 | WebDAV destination, probe, App Intent | pending |
 | P11 | Library, search, export | pending |
 | P12 | Data map, legal documents, mandatory screens | pending |
@@ -173,7 +173,7 @@ parse-checked only.
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac
 
-### P8 — outbox scheduler · pass (Linux, xcodebuild not run) · 2026-10-23
+### P8 — outbox scheduler · pass (Linux, xcodebuild not run) · 2026-10-23 · commit dfd49a5
 
 Gate steps 1, 3, 4, 5 exit 0 (86 core tests; outbox suites run 5× without a flake). App sources
 parse-checked only.
@@ -190,3 +190,22 @@ parse-checked only.
 - DECISIONS: The protocol is `DestinationAdapter` (the `Destination` name is the record); `exists` returns `RemoteRef?` rather than Bool. Every step is a DB write first: claim (`pending`→`in_flight`, conditional UPDATE so two drains never take the same row) → `exists` → `deliver` → `done` with `remote_ref` + `delivered_sha256`. Errors: `.unauthorized` → `needs_auth` and all pending rows of that destination too; `.permanent` → `failed`; `.transient` → backoff 30 s, 2 min, 10 min, 1 h, 6 h…, `failed` at attempt 20. Probe `.unreachable` costs no attempt. The file is re-hashed before each attempt (`hash_mismatch` → failed). `in_flight` older than 15 min → `pending`. A drain called during a drain loops once more. Wi-Fi-only destinations need Wi-Fi and no Low Data Mode. Destination config `sidecar = "1"` = keeps a JSON sidecar; edits re-queue `done` rows of sidecar destinations or of naming rules with field tokens, keeping `remote_ref` so the adapter gets `previousRef` (the adapter must replace/move the old copy). Enabling a destination should call `enqueueBacklog`.
 - DEFERRED: none
 - MANUAL: on a device, background refresh only fires after real use; run `./scripts/gate.sh` on the Mac
+
+### P9 — iCloud, Files folder, share sheet, naming · pass except the iCloud entitlement (Linux, xcodebuild not run) · 2026-10-23
+
+The Contract says P9 stops BLOCKED without Apple Developer membership. Everything that does not need
+the membership is built; the iCloud **entitlement** is not added (a personal team cannot sign an
+iCloud container), so `ICloudAdapter.probe()` answers unreachable and iCloud rows wait. Gate steps 1,
+3, 4, 5 exit 0 (104 core tests). App sources parse-checked only.
+
+- CHANGED: core `Delivery/NamingRule.swift` (tokens, sanitising, NFC, 120-char parts, `_{id8}`,
+  `SlipLabels`), `Delivery/Sidecar.swift`, `Delivery/DirectoryWriter.swift` (exists/deliver for any
+  folder, collision, sidecar, move after rename), `Services/DestinationStore.swift`; `DeliveryItem.labels`
+  resolved by the outbox; `NamingTests.swift`; `docs/SIDECAR.md`; app `Outbox/FileDestinations.swift`
+  (`ICloudAdapter` `iCloud.com.etzian.slips/Documents`, `FolderAdapter` with security-scoped bookmark,
+  `NSFileCoordinator`), `Destinations/` (list with state and banner, detail: name, on/off, naming rule
+  + preview, Wi-Fi only, sidecar, retry now, pick folder again, remove), Share in the review toolbar;
+  `Info.plist` `NSUbiquitousContainers`; 39 catalog keys
+- DECISIONS: File names always end `.pdf`; empty folder parts are dropped; values have `/ : \ * ? " < > |` and control characters replaced by `-`; `..` cannot survive; `{total}` is `1234.56` (no grouping), `{date}` the slip's day or the capture day (UTC). A name held by a different file gets `_{id8}`; `exists` = same size and SHA-256 (and, with a sidecar, identical sidecar bytes). Re-delivery after an edit removes the previous copy only if it is still byte-identical. Folder bookmark is base64 in `config.bookmark` (+ `folder_name`); stale/refused → `needs_auth` ("choose the folder again"). The library cannot be turned off or removed. Turning a destination on queues the backlog. Selection sharing lands with the library in P11.
+- DEFERRED: iCloud entitlement (`Slips/Slips.entitlements` with `com.apple.developer.icloud-container-identifiers` = `iCloud.com.etzian.slips`, `com.apple.developer.icloud-services` = `CloudDocuments`, `com.apple.developer.ubiquity-container-identifiers`; `CODE_SIGN_ENTITLEMENTS`) once the membership exists
+- MANUAL: (user) Apple Developer membership, then the entitlement above and the container in the developer portal; a Folder destination on iCloud Drive and on one File Provider app (Dropbox, OneDrive or Google Drive) on a device, noting whether the bookmark survives a relaunch; run `./scripts/gate.sh` on the Mac

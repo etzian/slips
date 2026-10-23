@@ -27,8 +27,12 @@ public struct DeliveryItem: Sendable {
     public var byteCount: Int
     /// Where an earlier delivery of this slip landed, when it is re-delivered after an edit.
     public var previousRef: RemoteRef?
+    /// Names of the slip's business, sub-category and payment method, for naming rules and sidecars.
+    public var labels: SlipLabels
 
-    public init(slip: Slip, destination: Destination, pdfURL: URL, sha256: String, byteCount: Int, previousRef: RemoteRef?) {
+    public init(slip: Slip, destination: Destination, pdfURL: URL, sha256: String, byteCount: Int, previousRef: RemoteRef?,
+                labels: SlipLabels = SlipLabels()) {
+        self.labels = labels
         self.slip = slip
         self.destination = destination
         self.pdfURL = pdfURL

@@ -46,8 +46,9 @@ struct SettingsView: View {
                 }
 
                 Section("settings.destinations") {
-                    Text("settings.destinations.placeholder")
-                        .foregroundStyle(.secondary)
+                    if let id = model.activeProfileId {
+                        NavigationLink("settings.destinations.manage") { DestinationsView(profileId: id) }
+                    }
                 }
 
                 Section("settings.privacy") {
