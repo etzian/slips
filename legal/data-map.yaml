@@ -1,0 +1,109 @@
+# Data map of Slips — what is stored, where, for how long, and what leaves the phone.
+# Written from the code (M1, 2026-10-23). Schema: _foundation/legal/schema/data-map.schema.yaml
+# (not yet published in the foundation; this file follows docs/EXECUTION_PLAN.md §9 and will be
+# validated by `ez legal check .` once the legal layer exists). Documents and PrivacyInfo.xcprivacy are
+# generated from it by `ez legal gen .`, never written by hand.
+app: slips
+archetype: standalone
+store_distribution: [app-store]
+controller: company            # facts from _foundation/company/etzian.yaml
+account: none                  # Slips has no account of its own
+analytics: none
+crash_reporting: none          # no SDK that sends data; Apple's opt-in diagnostics only
+third_party_sdks: []           # GRDB is a local library, it sends nothing
+data_leaves_device: true       # only to destinations the user turns on
+cloud_sync: true               # iCloud Drive or a WebDAV server, when turned on
+
+permissions:
+  camera:
+    purpose: Scan slips with the system document scanner. Images stay on the device.
+    when: First scan.
+  photos:
+    purpose: Import images of slips (photo picker; no library-wide access is requested).
+    when: Never prompted — the system picker grants access to the chosen images only.
+  files:
+    purpose: A folder the user picks in Files as a destination (security-scoped bookmark).
+    when: When the user adds a Folder destination.
+  local_network:
+    purpose: Deliver slips to a WebDAV server on the user's network.
+    when: First delivery to a server marked local.
+  face_id:
+    purpose: Optional app lock.
+    when: When the user turns the lock on.
+
+data:
+  - id: slip_pdf
+    what: PDF of the scanned slip (one page per scanned page, with an invisible OCR text layer).
+    personal_information: true   # may show a name, a partial card number, an address
+    sensitive: false
+    stored: device                # Application Support/Slips/<profile>/<slip>/slip.pdf
+    protection: NSFileProtectionComplete
+    retention: Until the user deletes it or erases all data. Tax evidence is usually kept six years; the phone need not be where it is kept.
+    backup: Included in the device backup (iCloud Backup or computer) per the user's settings.
+  - id: slip_fields
+    what: Merchant, date, amounts, taxes, tip, currency, supplier GST/QST numbers, OCR text, notes, classification (profile, kind, business, sub-category, payment method), checks.
+    personal_information: true
+    stored: device                # SQLite (GRDB) in Application Support
+    retention: Same as slip_pdf.
+  - id: reference_data
+    what: Profiles, businesses, sub-categories, payment methods (name, type, last four digits, currency), merchant memory.
+    personal_information: true
+    stored: device
+    retention: Until changed, archived or erased.
+  - id: destination_settings
+    what: Destination names, addresses, user names, naming rules, folder bookmarks.
+    personal_information: true
+    stored: device
+    retention: Until the destination is removed or data is erased.
+  - id: destination_secrets
+    what: WebDAV passwords.
+    personal_information: true
+    stored: keychain              # kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, never synced
+    retention: Until the destination is removed or data is erased.
+  - id: preferences
+    what: Theme, first-run flag, active profile, app-lock setting.
+    personal_information: false
+    stored: device                # UserDefaults
+    retention: Until the app is deleted or data is erased.
+
+recipients:                     # every destination is off by default (Law 25, privacy by default)
+  - id: library
+    who: The device itself.
+    receives: Everything above.
+    default: on
+    transfer_outside_quebec: false
+  - id: icloud
+    who: Apple (iCloud Drive, the user's own account).
+    vendor: apple                 # _foundation/legal/vendors.yaml
+    receives: [slip_pdf, slip_sidecar_when_on]
+    default: off
+    transfer_outside_quebec: true # EFVP transfer assessment required before release
+    user_controls: Destinations › iCloud Drive (on/off, naming rule, sidecar).
+  - id: folder
+    who: Whatever service backs the folder the user picks (On My iPhone, iCloud Drive, an SMB share, a File Provider app such as Dropbox, OneDrive or Google Drive).
+    receives: [slip_pdf, slip_sidecar_when_on]
+    default: off
+    transfer_outside_quebec: depends on the provider the user chose
+  - id: webdav
+    who: A server the user owns or chooses (a NAS, Nextcloud, a WebDAV container).
+    receives: [slip_pdf, slip_sidecar_when_on]
+    credentials: user name and password over HTTPS (plain HTTP only for hosts the user marks local)
+    default: off
+    transfer_outside_quebec: depends on the server's location
+  - id: share_sheet
+    who: The app or person the user picks, one slip or an export at a time.
+    receives: [slip_pdf, export_csv_json_zip]
+    default: manual
+  - id: fin
+    who: The user's fin server (M4, not in this release).
+    default: off
+
+slip_sidecar_when_on: JSON next to the PDF with slip_fields (docs/SIDECAR.md); no card digits.
+export_csv_json_zip: docs/EXPORT.md; made on the device, leaves only through the share sheet.
+
+automated_processing:
+  ocr: On-device (Vision). No image or text leaves the device for recognition.
+  parsing_and_checks: On-device rules (SlipsCore). No decision with legal effect; the user confirms every field.
+  ai: none in M1 (M2 adds an optional, off-by-default endpoint; a data-map change and a legal review).
+
+erasure: Settings › Danger zone › "Erase all data on this iPhone" removes every slip file, every row, the Keychain items and preferences. Copies already delivered to destinations are not touched; the screen says so.

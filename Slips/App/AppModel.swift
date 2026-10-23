@@ -33,6 +33,7 @@ final class AppModel {
         self.destinations = DestinationStore(database: database)
         self.scheduler = DeliveryScheduler(database: database, files: files, adapters: DestinationAdapters.make)
         self.defaults = defaults
+        self.firstRunDone = FirstRunState(defaults: defaults).isDone
         bootstrap()
     }
 
@@ -42,9 +43,12 @@ final class AppModel {
         let fm = FileManager.default
         if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
             let tmp = fm.temporaryDirectory.appendingPathComponent("ui-\(UUID().uuidString)")
+            let defaults = UserDefaults(suiteName: "ui-tests") ?? .standard
+            defaults.removePersistentDomain(forName: "ui-tests")
+            // UI tests start past the first-run screen unless they test it.
+            if !ProcessInfo.processInfo.arguments.contains("-firstRun") { FirstRunState(defaults: defaults).markDone() }
             // An in-memory database cannot fail to open.
-            return AppModel(database: try! AppDatabase.inMemory(), files: FileStore(root: tmp),
-                            defaults: UserDefaults(suiteName: "ui-tests") ?? .standard)
+            return AppModel(database: try! AppDatabase.inMemory(), files: FileStore(root: tmp), defaults: defaults)
         }
         let support = (try? fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             ?? fm.temporaryDirectory
@@ -86,6 +90,26 @@ final class AppModel {
         } catch {
             Self.log.error("bootstrap failed: \(String(describing: error), privacy: .private)")
             startupError = String(describing: error)
+        }
+    }
+
+    /// Erase all data on this iPhone: rows, slip files, Keychain items, preferences. Delivered copies
+    /// stay where they are. The app then starts over with a fresh profile and the first-run screen.
+    func eraseAll() throws {
+        let destinations = try Eraser(database: database, files: files).eraseAll()
+        destinations.forEach(Keychain.delete)
+        for key in [Self.activeProfileKey, FirstRunState.key, AppLock.key, Appearance.storageKey] {
+            defaults.removeObject(forKey: key)
+        }
+        activeProfileId = nil
+        bootstrap()
+        firstRunDone = false
+    }
+
+    /// Mirrors `FirstRunState` so the shell re-renders when it changes.
+    var firstRunDone = false {
+        didSet {
+            if firstRunDone { FirstRunState(defaults: defaults).markDone() } else { FirstRunState(defaults: defaults).reset() }
         }
     }
 

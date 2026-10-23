@@ -9,6 +9,8 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
     @State private var profiles: Loadable<[Profile]> = .loading
+    @State private var confirmErase = false
+    @State private var error: LocalizedStringKey?
 
     var body: some View {
         NavigationStack {
@@ -52,21 +54,31 @@ struct SettingsView: View {
                 }
 
                 Section("settings.privacy") {
-                    Text("settings.privacy.placeholder")
-                        .foregroundStyle(.secondary)
+                    NavigationLink("settings.privacy.manage") { PrivacyView() }
                 }
 
                 Section("settings.about") {
-                    Text("settings.about.placeholder")
-                        .foregroundStyle(.secondary)
+                    NavigationLink("settings.about.manage") { AboutView() }
                 }
 
-                Section("settings.dangerZone") {
-                    Text("settings.dangerZone.placeholder")
-                        .foregroundStyle(.secondary)
+                Section {
+                    Button("erase.button", role: .destructive) { confirmErase = true }
+                        .accessibilityIdentifier("erase.button")
+                } header: {
+                    Text("settings.dangerZone")
+                } footer: {
+                    Text("erase.footer")
                 }
             }
             .navigationTitle(Text("tab.settings"))
+            .confirmationDialog("erase.confirm.title", isPresented: $confirmErase, titleVisibility: .visible) {
+                Button("erase.confirm.action", role: .destructive) {
+                    attempt($error) { try model.eraseAll() }
+                }
+            } message: {
+                Text("erase.confirm.message")
+            }
+            .errorAlert($error)
             .task {
                 do {
                     for try await list in model.reference.observeProfiles() { profiles = .loaded(list) }

@@ -1,6 +1,108 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "about.contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact"
+          }
+        }
+      }
+    },
+    "about.eula" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End-user licence agreement"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrat de licence d’utilisateur final"
+          }
+        }
+      }
+    },
+    "about.licences" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Third-party licences"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licences de tiers"
+          }
+        }
+      }
+    },
+    "about.privacyPolicy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy policy"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Politique de confidentialité"
+          }
+        }
+      }
+    },
+    "about.terms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terms of use"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conditions d’utilisation"
+          }
+        }
+      }
+    },
+    "about.version %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %@"
+          }
+        }
+      }
+    },
     "action.cancel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1732,6 +1834,91 @@
         }
       }
     },
+    "erase.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase all data on this iPhone"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer toutes les données de cet iPhone"
+          }
+        }
+      }
+    },
+    "erase.confirm.action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase everything"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout effacer"
+          }
+        }
+      }
+    },
+    "erase.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every slip, PDF, profile, destination and password on this iPhone is deleted. Copies already sent to iCloud, a folder or a server are not touched. This cannot be undone."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les reçus, PDF, profils, destinations et mots de passe de cet iPhone sont supprimés. Les copies déjà envoyées à iCloud, à un dossier ou à un serveur ne sont pas touchées. Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "erase.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase all data on this iPhone?"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer toutes les données de cet iPhone?"
+          }
+        }
+      }
+    },
+    "erase.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deletes every slip and setting on this iPhone. Copies already delivered to destinations stay where they are."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprime tous les reçus et réglages de cet iPhone. Les copies déjà livrées aux destinations restent où elles sont."
+          }
+        }
+      }
+    },
     "error.details" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2613,6 +2800,91 @@
         }
       }
     },
+    "firstRun.pitch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan a slip, say what it is, and it lands where it belongs."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numérisez un reçu, dites ce que c’est, et il arrive au bon endroit."
+          }
+        }
+      }
+    },
+    "firstRun.privacy.destinations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips leave this iPhone only for destinations you turn on: iCloud Drive, a folder in Files or your own server. All are off to start."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les reçus ne quittent cet iPhone que vers les destinations que vous activez : iCloud Drive, un dossier dans Fichiers ou votre propre serveur. Toutes sont désactivées au départ."
+          }
+        }
+      }
+    },
+    "firstRun.privacy.device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your slips and their text are read and kept on this iPhone."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos reçus et leur texte sont lus et conservés sur cet iPhone."
+          }
+        }
+      }
+    },
+    "firstRun.privacy.nothingElse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No account, no ads, no analytics."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun compte, aucune publicité, aucune statistique d’utilisation."
+          }
+        }
+      }
+    },
+    "firstRun.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commencer"
+          }
+        }
+      }
+    },
     "intent.sendPending.description" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3079,6 +3351,57 @@
         }
       }
     },
+    "lock.reason" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock to see your slips."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déverrouillez pour voir vos reçus."
+          }
+        }
+      }
+    },
+    "lock.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locked"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verrouillé"
+          }
+        }
+      }
+    },
+    "lock.unlock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déverrouiller"
+          }
+        }
+      }
+    },
     "notice.archivedInUse" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3313,6 +3636,346 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Autre"
+          }
+        }
+      }
+    },
+    "privacy.lock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock with Face ID"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verrouiller avec Face ID"
+          }
+        }
+      }
+    },
+    "privacy.lock.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks for Face ID or the passcode each time the app comes back."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demande Face ID ou le code chaque fois que l’app revient."
+          }
+        }
+      }
+    },
+    "privacy.lock.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID or a passcode must be set up on this iPhone first."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID ou un code doit d’abord être configuré sur cet iPhone."
+          }
+        }
+      }
+    },
+    "privacy.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivée"
+          }
+        }
+      }
+    },
+    "privacy.officer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Person in charge of privacy"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Responsable de la protection des renseignements personnels"
+          }
+        }
+      }
+    },
+    "privacy.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activée"
+          }
+        }
+      }
+    },
+    "privacy.processing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading the slips"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture des reçus"
+          }
+        }
+      }
+    },
+    "privacy.processing.ocr" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text recognition and checks run on this iPhone. No image or text is sent anywhere to be read."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La reconnaissance du texte et les vérifications se font sur cet iPhone. Aucune image ni aucun texte n’est envoyé ailleurs pour être lu."
+          }
+        }
+      }
+    },
+    "privacy.receives.folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each slip’s PDF, and its JSON file when turned on, to the service behind the folder you chose."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le PDF de chaque reçu, et son fichier JSON si activé, au service derrière le dossier choisi."
+          }
+        }
+      }
+    },
+    "privacy.receives.icloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each slip’s PDF, and its JSON file when turned on, to your iCloud Drive (Apple)."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le PDF de chaque reçu, et son fichier JSON si activé, dans votre iCloud Drive (Apple)."
+          }
+        }
+      }
+    },
+    "privacy.receives.library" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything, on this iPhone."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout, sur cet iPhone."
+          }
+        }
+      }
+    },
+    "privacy.receives.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not available in this version."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non offert dans cette version."
+          }
+        }
+      }
+    },
+    "privacy.receives.webdav" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each slip’s PDF, and its JSON file when turned on, to the server you set up."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le PDF de chaque reçu, et son fichier JSON si activé, au serveur que vous avez configuré."
+          }
+        }
+      }
+    },
+    "privacy.sent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What leaves this iPhone"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui quitte cet iPhone"
+          }
+        }
+      }
+    },
+    "privacy.sent.never" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing else: no analytics, no crash reports from the app, no advertising identifier."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien d’autre : aucune statistique, aucun rapport de plantage de l’app, aucun identifiant publicitaire."
+          }
+        }
+      }
+    },
+    "privacy.sent.offByDefault" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only to the destinations you turn on. Every destination starts off."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seulement vers les destinations que vous activez. Toutes sont désactivées au départ."
+          }
+        }
+      }
+    },
+    "privacy.stored" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What is stored where"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui est conservé et où"
+          }
+        }
+      }
+    },
+    "privacy.stored.backup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app’s data is part of this iPhone’s backup, as your backup settings say."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les données de l’app font partie de la sauvegarde de cet iPhone, selon vos réglages de sauvegarde."
+          }
+        }
+      }
+    },
+    "privacy.stored.device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips (PDF and text), their details, your profiles, businesses, sub-categories and payment methods (name and last four digits only) are kept in the app on this iPhone, protected while it is locked."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les reçus (PDF et texte), leurs détails, vos profils, entreprises, sous-catégories et modes de paiement (nom et quatre derniers chiffres seulement) sont conservés dans l’app sur cet iPhone, protégés quand il est verrouillé."
+          }
+        }
+      }
+    },
+    "privacy.stored.keychain" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server passwords are kept in this iPhone’s keychain, never in a file and never synced."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les mots de passe des serveurs sont conservés dans le trousseau de cet iPhone, jamais dans un fichier et jamais synchronisés."
           }
         }
       }
@@ -3732,19 +4395,19 @@
         }
       }
     },
-    "settings.about.placeholder" : {
+    "settings.about.manage" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version and legal information arrive in a later build."
+            "value" : "About this app"
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La version et l’information juridique arrivent dans une version ultérieure."
+            "value" : "À propos de l’app"
           }
         }
       }
@@ -3796,23 +4459,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zone de danger"
-          }
-        }
-      }
-    },
-    "settings.dangerZone.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erasing data arrives in a later build."
-          }
-        },
-        "fr-CA" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’effacement des données arrive dans une version ultérieure."
           }
         }
       }
@@ -3936,19 +4582,19 @@
         }
       }
     },
-    "settings.privacy.placeholder" : {
+    "settings.privacy.manage" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Everything stays on this iPhone."
+            "value" : "Privacy and lock"
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tout reste sur cet iPhone."
+            "value" : "Confidentialité et verrouillage"
           }
         }
       }

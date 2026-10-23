@@ -66,7 +66,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | done (iCloud entitlement waits on membership) |
 | P10 | WebDAV destination, probe, App Intent | done |
 | P11 | Library, search, export | done |
-| P12 | Data map, legal documents, mandatory screens | pending |
+| P12 | Data map, legal documents, mandatory screens | done except generated legal documents (foundation's `ez legal` missing) |
 | P13 | Accessibility, fr-CA review, TestFlight v0.1.0 | pending |
 
 ## Handoff log
@@ -227,7 +227,7 @@ container: the tests use an in-process WebDAV double, so no port was taken from 
 - DEFERRED: none
 - MANUAL: on a device against a real LAN WebDAV server (NAS or container): add it, airplane mode, scan, back online, check one copy; the Shortcuts automation from the help page; run `./scripts/gate.sh` on the Mac
 
-### P11 — library, search, export · pass (Linux, xcodebuild not run) · 2026-10-23
+### P11 — library, search, export · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 86e4ff0
 
 Gate steps 1, 3, 4, 5 exit 0 (125 core tests; the ZIP also passes `unzip -t`). App sources
 parse-checked only.
@@ -242,3 +242,24 @@ parse-checked only.
 - DECISIONS: Search = each word a quoted prefix term, all required; FTS syntax typed by the user is neutralised. The library files a slip under its day, else its capture day (UTC). Delivery state per slip: none → local only, any failed/needs_auth → problem, all done → delivered, else waiting. "With warnings" = a warning or blocking check stored. CSV: BOM + CRLF, formula-looking text prefixed with `'`. Export PDF names use the default naming rule, clashes get `_{id8}`; files are written to a temp folder with complete protection and leave only through the share sheet. Editing a filed slip from its detail goes through `markReady` (re-queues destinations per P8).
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac
+
+### P12 — data map, legal documents, mandatory screens · pass except the generated legal documents (Linux, xcodebuild not run) · 2026-10-23
+
+The foundation clone available here (etzianco/foundation `dbd3fa2`) has no legal layer yet: no
+`legal/schema/data-map.schema.yaml`, no `vendors.yaml`, no `ez legal gen` / `ez legal check`. So
+`legal/generated/` (privacy policy, terms, EULA, retention schedule, EFVP, Apple worksheet) and
+`Slips/Resources/PrivacyInfo.xcprivacy` were **not** produced: they must be generated, never written by
+hand. Everything else is in. Gate steps 1, 3, 4, 5 exit 0 (126 core tests). App sources parse-checked only.
+
+- CHANGED: `legal/data-map.yaml` (from the code: archetype standalone, app-store, permissions camera,
+  photos, files, local network, Face ID; data, storage, protection, retention; every destination and
+  what it receives; erasure); `scripts/gen-company.sh` (`ez profile --json` → `Slips/Generated/Company.swift`
+  + copy of `THIRD-PARTY.md`; `--check` diffs), generated files committed; `check-hygiene.sh` fails
+  when `Company.swift` is missing; core `Services/Eraser.swift` + test; app `Mandatory/` (first run once,
+  About with version, *by Etzian*, copyright, licences and bundled documents when present, Privacy page
+  with lock and per-destination "what it receives", Face ID / passcode lock, "Erase all data on this
+  iPhone" last in Settings, confirmed); `NSFaceIDUsageDescription`; `SlipsTests/MandatoryTests.swift`
+  (first-run flag, erase, file protection, company facts); 41 catalog keys
+- DECISIONS: About lists `privacy-policy.<fr-CA|en>.md`, `terms…`, `eula…` only if bundled (drop the generated files into `Slips/Resources/Legal/` when `ez legal gen .` exists). The lock uses `.deviceOwnerAuthentication` (Face ID, else passcode) and engages when the app goes to the background. Erase deletes every row, the `Slips/` folder, Keychain items of every destination and the preferences, vacuums the database, then bootstraps a new profile and shows the first run again. `-uiTesting` starts past the first run (`-firstRun` to test it). App name and version come from the bundle; company facts only from `Company.swift`.
+- DEFERRED: `legal/generated/*`, bundling them, `PrivacyInfo.xcprivacy` and `ez legal check .` — waiting on the foundation's legal layer (its P6)
+- MANUAL: (user) build the foundation legal layer or run `ez legal gen .` from a foundation that has it; validate `legal/data-map.yaml` against the schema; EFVP transfer assessment for iCloud (Apple, outside Québec); `scripts/gen-company.sh --check` against your local `ez`; run `./scripts/gate.sh` on the Mac

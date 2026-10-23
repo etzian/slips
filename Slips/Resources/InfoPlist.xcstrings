@@ -36,6 +36,24 @@
         }
       }
     },
+    "NSFaceIDUsageDescription" : {
+      "comment" : "Face ID permission prompt.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID unlocks the app when you turn on the lock."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID déverrouille l’app quand vous activez le verrou."
+          }
+        }
+      }
+    },
     "NSLocalNetworkUsageDescription" : {
       "comment" : "Local network permission prompt.",
       "extractionState" : "manual",

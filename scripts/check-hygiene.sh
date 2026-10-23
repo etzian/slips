@@ -41,5 +41,8 @@ hits=$(git status --porcelain 2>/dev/null | grep -E '(DerivedData/|xcuserdata/|\
 [ -n "$hits" ] && report "build products in git status:
 $hits"
 
+# 7. company facts come from the generated file (the gate never calls ez)
+[ -f Slips/Generated/Company.swift ] || report "Slips/Generated/Company.swift missing: run scripts/gen-company.sh"
+
 [ $fail -eq 0 ] && echo "hygiene ok"
 exit $fail
