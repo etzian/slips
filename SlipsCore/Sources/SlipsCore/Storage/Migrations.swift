@@ -6,6 +6,9 @@ enum Migrations {
         migrator.registerMigration("v1_initial") { db in
             try db.execute(sql: v1Initial)
         }
+        migrator.registerMigration("v2_fts") { db in
+            try db.execute(sql: v2FTS)
+        }
     }
 
     /// Plan §3. Ids are UUIDs (16-byte blobs, GRDB's default), dates are GRDB date strings (UTC),
@@ -128,5 +131,26 @@ enum Migrations {
             PRIMARY KEY (slip_id, destination_id)
         );
         CREATE INDEX deliveries_due ON deliveries(status, next_attempt_at);
+        """
+
+    /// Full-text search over merchant, notes and OCR text (plan P11). External content on `slips`,
+    /// kept in step by triggers; accents ignored, so "epicerie" finds "Épicerie".
+    static let v2FTS = """
+        CREATE VIRTUAL TABLE slips_fts USING fts5(
+            merchant, notes, ocr_text,
+            content = 'slips', content_rowid = 'rowid',
+            tokenize = 'unicode61 remove_diacritics 2'
+        );
+        CREATE TRIGGER slips_fts_insert AFTER INSERT ON slips BEGIN
+            INSERT INTO slips_fts(rowid, merchant, notes, ocr_text) VALUES (new.rowid, new.merchant, new.notes, new.ocr_text);
+        END;
+        CREATE TRIGGER slips_fts_delete AFTER DELETE ON slips BEGIN
+            INSERT INTO slips_fts(slips_fts, rowid, merchant, notes, ocr_text) VALUES ('delete', old.rowid, old.merchant, old.notes, old.ocr_text);
+        END;
+        CREATE TRIGGER slips_fts_update AFTER UPDATE OF merchant, notes, ocr_text ON slips BEGIN
+            INSERT INTO slips_fts(slips_fts, rowid, merchant, notes, ocr_text) VALUES ('delete', old.rowid, old.merchant, old.notes, old.ocr_text);
+            INSERT INTO slips_fts(rowid, merchant, notes, ocr_text) VALUES (new.rowid, new.merchant, new.notes, new.ocr_text);
+        END;
+        INSERT INTO slips_fts(slips_fts) VALUES ('rebuild');
         """
 }

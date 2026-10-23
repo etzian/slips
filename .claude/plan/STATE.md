@@ -65,7 +65,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P8 | Outbox scheduler | done |
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | done (iCloud entitlement waits on membership) |
 | P10 | WebDAV destination, probe, App Intent | done |
-| P11 | Library, search, export | pending |
+| P11 | Library, search, export | done |
 | P12 | Data map, legal documents, mandatory screens | pending |
 | P13 | Accessibility, fr-CA review, TestFlight v0.1.0 | pending |
 
@@ -210,7 +210,7 @@ iCloud container), so `ICloudAdapter.probe()` answers unreachable and iCloud row
 - DEFERRED: iCloud entitlement (`Slips/Slips.entitlements` with `com.apple.developer.icloud-container-identifiers` = `iCloud.com.etzian.slips`, `com.apple.developer.icloud-services` = `CloudDocuments`, `com.apple.developer.ubiquity-container-identifiers`; `CODE_SIGN_ENTITLEMENTS`) once the membership exists
 - MANUAL: (user) Apple Developer membership, then the entitlement above and the container in the developer portal; a Folder destination on iCloud Drive and on one File Provider app (Dropbox, OneDrive or Google Drive) on a device, noting whether the bookmark survives a relaunch; run `./scripts/gate.sh` on the Mac
 
-### P10 — WebDAV destination and App Intent · pass (Linux, xcodebuild not run) · 2026-10-23
+### P10 — WebDAV destination and App Intent · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 8ea264c
 
 Gate steps 1, 3, 4, 5 exit 0 (114 core tests, including the exit scenario "500 for ten minutes, then
 201: delivered once, the other destination not held up"). App sources parse-checked only. No localhost
@@ -226,3 +226,19 @@ container: the tests use an in-process WebDAV double, so no port was taken from 
 - DECISIONS: `exists` = PROPFIND depth 0 size check **then a GET + SHA-256 compare** when the size matches: two different slips can share a name and size (a test caught that the size alone would have skipped the second slip). Probe = health URL `GET` or `OPTIONS` base, 3 s; 2xx–3xx reachable, 401 needs_auth. MKCOL 201/405/301 ok, 409 → permanent `base_missing`; PUT from the file (background session) 200/201/204. 401 → unauthorized; 403/404/405/409/413/415 → permanent; others and network errors → transient. Plain `http` refused unless the destination has `local_network = "1"`; the ATS exception is `NSAllowsLocalNetworking` only. Password in the Keychain (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, service `com.etzian.slips.destination`, account = destination id), never in config. An upload that finishes while the app is gone is recorded by the next drain's `exists`.
 - DEFERRED: none
 - MANUAL: on a device against a real LAN WebDAV server (NAS or container): add it, airplane mode, scan, back online, check one copy; the Shortcuts automation from the help page; run `./scripts/gate.sh` on the Mac
+
+### P11 — library, search, export · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (125 core tests; the ZIP also passes `unzip -t`). App sources
+parse-checked only.
+
+- CHANGED: core migration `v2_fts` (FTS5 `slips_fts`, external content + triggers, `remove_diacritics 2`),
+  `Library/LibraryQuery.swift` (`LibraryFilter`, `LibraryItem` with `DeliveryState`, months),
+  `Export/Exporter.swift` (rows, CSV, JSON, ZIP, manifest), `Export/Zip.swift` (stored ZIP + CRC32, no
+  dependency); `LibraryExportTests.swift`; `docs/EXPORT.md`; app `Library/` (`LibraryView` by month with
+  search, filters, selection share, banner and waiting note; `LibraryFilterView`; `SlipDetailView` with
+  PDF view, checks, per-destination state + retry, edit through the review screen; `ExportView`);
+  44 catalog keys
+- DECISIONS: Search = each word a quoted prefix term, all required; FTS syntax typed by the user is neutralised. The library files a slip under its day, else its capture day (UTC). Delivery state per slip: none → local only, any failed/needs_auth → problem, all done → delivered, else waiting. "With warnings" = a warning or blocking check stored. CSV: BOM + CRLF, formula-looking text prefixed with `'`. Export PDF names use the default naming rule, clashes get `_{id8}`; files are written to a temp folder with complete protection and leave only through the share sheet. Editing a filed slip from its detail goes through `markReady` (re-queues destinations per P8).
+- DEFERRED: none
+- MANUAL: run `./scripts/gate.sh` on the Mac

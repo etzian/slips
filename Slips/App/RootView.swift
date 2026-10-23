@@ -12,7 +12,7 @@ struct RootView: View {
             ErrorStateView(title: "error.startup.title", message: "error.startup.message", detail: error, retry: nil)
         } else {
             TabView(selection: $tab) {
-                LibraryPlaceholderView()
+                LibraryView()
                     .tabItem { Label("tab.library", systemImage: "tray.full") }
                     .tag(Tab.library)
                 CaptureView()
