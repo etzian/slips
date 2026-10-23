@@ -12,11 +12,12 @@ final class DeliveryScheduler {
 
     let outbox: Outbox
     private let monitor = NWPathMonitor()
-    private let conditions = NetworkState()
+    private let conditions: NetworkState
     private var timer: Task<Void, Never>?
 
     init(database: AppDatabase, files: FileStore, adapters: @escaping Outbox.AdapterProvider) {
-        let conditions = self.conditions
+        let conditions = NetworkState()
+        self.conditions = conditions
         outbox = Outbox(database: database, files: files, adapters: adapters, network: { conditions.current })
         monitor.pathUpdateHandler = { [weak self] path in
             let usable = path.status == .satisfied
