@@ -56,7 +56,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | # | Slice | Status |
 |---|---|---|
 | P1 | Skeleton: package, app, gate, catalogs | done |
-| P2 | Storage and migrations | pending |
+| P2 | Storage and migrations | done |
 | P3 | Reference data | pending |
 | P4 | Capture: scanner → PDF on disk | pending |
 | P5 | OCR and parser | pending |
@@ -87,3 +87,18 @@ Tuist"); attempt 2 (opus) removed it. Orchestrator re-ran `./scripts/gate.sh` (e
 - DECISIONS: Slips.xcodeproj/project.pbxproj is the source of truth, hand-maintained, with no generator. New files under Slips/, SlipsTests/ and SlipsUITests/ are picked up automatically; edit the pbxproj only for settings and exceptions. SlipsCore is linked into the app only; SlipsTests imports it through the host app (TEST_HOST/BUNDLE_LOADER). The app name is CFBundleDisplayName in Slips/Resources/InfoPlist.xcstrings, so Localizable.xcstrings holds only screen strings (`placeholder.title`). Set SLIPS_SIM_DESTINATION to run the gate on another simulator. THIRD-PARTY.md format: `## <package identity> <version>` then `SPDX: <id>` line (the licence check parses it; new packages need the same).
 - DEFERRED: none (attempt 1 noted: no app icon image, empty AppIcon set; Company.swift / gen-company.sh belong to P12)
 - MANUAL: none
+
+### P2 — storage and migrations · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Run in a Claude Code cloud session (Linux, Swift 6.2.1 from the official `swift:6.2.1-noble` image, no
+Xcode). Gate steps 1, 3, 4, 5 exit 0 (`swift test` 18 tests; licences with
+`ETZIAN_FOUNDATION=<foundation clone>`); step 2 (`xcodebuild build test`) **not run**: re-run
+`./scripts/gate.sh` on the Mac before trusting this phase.
+
+- CHANGED: `SlipsCore/Sources/SlipsCore/Storage/` (`Migrations.swift` v1_initial, `AppDatabase.swift`,
+  `Seed.swift`, `FileStore.swift`); `Model/` (`Enums.swift`, `Money.swift`, `CalendarDay.swift`,
+  `Records.swift`); `SlipsCoreInfo` marker and its skeleton test removed; `SlipsTests` now checks the
+  migration; `Tests/SlipsCoreTests/StorageTests.swift`
+- DECISIONS: UUIDs are GRDB's default 16-byte blobs (never compare with a uuid string); dates are GRDB date strings (UTC); `txn_date` is `CalendarDay` stored `YYYY-MM-DD`; amounts are `Int` minor units with the slip's `currency`, `Money` for display. Records conform to `SlipsRecord` (snake_case columns). JSON columns: `destinations.config` is `[String: String]`; `slips.extracted` and `slips.checks` are JSON `String?` until P5/P7 give them types. `merchant_memory` primary key (profile_id, merchant_norm). FKs: profile deletion cascades to everything; enterprises, sub-categories and payment methods used by a slip cannot be deleted (archive). `AppDatabase.createProfile(name:seedNames:)` takes the seeded destination names from the app (translated). `FileStore` paths are relative (`Slips/<profile>/<slip>/slip.pdf`, lowercase uuids); `.complete` for slip PDFs, `.untilFirstUnlock` for outbox staging files; protection only applied `#if os(iOS)`.
+- DEFERRED: none
+- MANUAL: run `./scripts/gate.sh` on the Mac (xcodebuild step)
