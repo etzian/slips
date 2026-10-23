@@ -273,19 +273,196 @@
         }
       }
     },
+    "capture.another" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan another slip"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numériser un autre reçu"
+          }
+        }
+      }
+    },
+    "capture.error.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing was saved. Try again; the slip in your hand is all that is needed."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien n’a été enregistré. Réessayez; il suffit du reçu que vous avez en main."
+          }
+        }
+      }
+    },
+    "capture.error.noImage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of the selected images could be read."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune des images choisies n’a pu être lue."
+          }
+        }
+      }
+    },
+    "capture.error.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The slip could not be saved"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le reçu n’a pas pu être enregistré"
+          }
+        }
+      }
+    },
+    "capture.importImages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import images"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer des images"
+          }
+        }
+      }
+    },
     "capture.message" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scanning arrives in the next version."
+            "value" : "Scan a slip or a bill. It is saved on this iPhone first, before anything is sent anywhere."
           }
         },
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La numérisation arrive dans la prochaine version."
+            "value" : "Numérisez un reçu ou une facture. Il est d’abord enregistré sur cet iPhone, avant tout envoi."
+          }
+        }
+      }
+    },
+    "capture.saved.message %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Saved on this iPhone: %lld page."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Saved on this iPhone: %lld pages."
+                }
+              }
+            }
+          }
+        },
+        "fr-CA" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Enregistré sur cet iPhone : %lld page."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Enregistré sur cet iPhone : %lld pages."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "capture.saved.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slip saved"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reçu enregistré"
+          }
+        }
+      }
+    },
+    "capture.saving" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saving the slip…"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement du reçu…"
+          }
+        }
+      }
+    },
+    "capture.scan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numériser"
           }
         }
       }
@@ -472,7 +649,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les virements et les paiements de carte sont toujours offerts : ils ne peuvent pas être retirés."
+            "value" : "Les virements et les paiements de carte sont toujours offerts : ils ne peuvent pas être retirés."
           }
         }
       }
@@ -795,7 +972,7 @@
         "fr-CA" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Des reçus l’utilisent : il a été archivé plutôt que supprimé. Restaurez-le depuis Archivés."
+            "value" : "Des reçus l’utilisent : il a été archivé plutôt que supprimé. Restaurez-le depuis Archivés."
           }
         }
       }

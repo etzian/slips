@@ -4,8 +4,36 @@
     "CFBundleDisplayName" : {
       "comment" : "App name shown under the icon (working name).",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Slips" } },
-        "fr-CA" : { "stringUnit" : { "state" : "translated", "value" : "Slips" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slips"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Camera permission prompt.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera scans your slips. The images stay on this iPhone."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’appareil photo numérise vos reçus. Les images restent sur cet iPhone."
+          }
+        }
       }
     }
   },

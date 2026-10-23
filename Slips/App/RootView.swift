@@ -15,7 +15,7 @@ struct RootView: View {
                 LibraryPlaceholderView()
                     .tabItem { Label("tab.library", systemImage: "tray.full") }
                     .tag(Tab.library)
-                CapturePlaceholderView()
+                CaptureView()
                     .tabItem { Label("tab.capture", systemImage: "doc.viewfinder") }
                     .tag(Tab.capture)
                 SettingsView()

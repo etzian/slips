@@ -10,6 +10,7 @@ final class AppModel {
     let database: AppDatabase
     let files: FileStore
     let reference: ReferenceData
+    let capture: CaptureStore
     private(set) var activeProfileId: UUID?
     /// Set when the database could not be opened; the shell shows it instead of the tabs.
     private(set) var startupError: String?
@@ -22,6 +23,7 @@ final class AppModel {
         self.database = database
         self.files = files
         self.reference = ReferenceData(database: database)
+        self.capture = CaptureStore(database: database, files: files)
         self.defaults = defaults
         bootstrap()
     }
@@ -65,6 +67,11 @@ final class AppModel {
             }
             let stored = defaults.string(forKey: Self.activeProfileKey).flatMap(UUID.init(uuidString:))
             activeProfileId = profiles.first { $0.id == stored }?.id ?? profiles.first?.id
+            // Before capture is offered: drop files of captures killed before their row, flag lost files.
+            let report = try capture.sweep()
+            if report.orphanFoldersRemoved + report.rowsMissingFile > 0 {
+                Self.log.notice("sweep: \(report.orphanFoldersRemoved) orphan folder(s), \(report.rowsMissingFile) missing file(s)")
+            }
         } catch {
             Self.log.error("bootstrap failed: \(String(describing: error), privacy: .private)")
             startupError = String(describing: error)

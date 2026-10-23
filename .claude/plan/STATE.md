@@ -58,7 +58,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P1 | Skeleton: package, app, gate, catalogs | done |
 | P2 | Storage and migrations | done |
 | P3 | Reference data | done |
-| P4 | Capture: scanner → PDF on disk | pending |
+| P4 | Capture: scanner → PDF on disk | done |
 | P5 | OCR and parser | pending |
 | P6 | Classification screen, suggestions | pending |
 | P7 | Checks | pending |
@@ -103,7 +103,7 @@ Xcode). Gate steps 1, 3, 4, 5 exit 0 (`swift test` 18 tests; licences with
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac (xcodebuild step)
 
-### P3 — reference data · pass (Linux, xcodebuild not run) · 2026-10-23
+### P3 — reference data · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 350c7a6
 
 Same Linux session. Gate steps 1, 3, 4, 5 exit 0 (31 tests). App sources pass `swiftc -parse` only:
 **not type-checked**; the first Mac `./scripts/gate.sh` is their first compile.
@@ -117,3 +117,17 @@ Same Linux session. Gate steps 1, 3, 4, 5 exit 0 (31 tests). App sources pass `s
 - DECISIONS: Catalog keys are dotted identifiers (`area.thing`), every key is `extractionState: manual`; dynamic keys (`subcategory.<key>`) are read with `Bundle.main.localizedString`. Active profile id in `UserDefaults` (`activeProfileId`); the app creates a "Personal" profile on first launch. `-uiTesting` launch argument = in-memory database + temp folder. Remove = delete when unused, archive when used; seeded sub-categories always archive; transfer keys refuse. Screens observe through `ReferenceData.observe*` streams (`.task { for try await … }`), never GRDB. Errors logged `privacy: .private`.
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac (first compile of the app target)
+
+### P4 — capture · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (36 core tests). App sources parse-checked only.
+
+- CHANGED: core `Capture/CaptureStore.swift` (save = file then draft row, `replacePDF` until delivered,
+  `sweep`), `Support/SHA256.swift` (CryptoKit; portable fallback compiled only without CryptoKit),
+  `Model/Check.swift` (`Check`, `CheckSeverity`, JSON in `slips.checks`); app `Capture/` (`PDFBuilder`
+  JPEG 0.7 / 2000 px / invisible text layer, `DocumentScanner`, `CaptureView` with scan + "Import
+  images" via PhotosPicker); sweep at launch in `AppModel.bootstrap`; `NSCameraUsageDescription`
+  (build setting + `InfoPlist.xcstrings`); `SlipsTests/PDFBuilderTests.swift`
+- DECISIONS: Write order is file → row; a failed insert deletes the file. The sweep deletes slip folders with no row and adds the blocking check `file_missing` to rows whose PDF is gone (P7 must keep it). `replacePDF` (for P5's text layer) is refused once a delivery row exists. PDF pages are 842 pt on the long edge. fr-CA uses U+00A0 before `:`. Plurals use catalog plural variations.
+- DEFERRED: none
+- MANUAL: on a device, scan a two-page slip and check the PDF opens and is a few hundred kB; run `./scripts/gate.sh` on the Mac
