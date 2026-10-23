@@ -21,7 +21,7 @@ final class AppModel {
 
     private let defaults: UserDefaults
     private static let activeProfileKey = "activeProfileId"
-    static let log = Logger(subsystem: "com.etzian.slips", category: "app")
+    nonisolated static let log = Logger(subsystem: "com.etzian.slips", category: "app")
 
     init(database: AppDatabase, files: FileStore, defaults: UserDefaults = .standard) {
         self.database = database

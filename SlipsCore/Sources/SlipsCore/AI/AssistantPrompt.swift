@@ -113,7 +113,7 @@ public struct AssistantReading: Codable, Hashable, Sendable {
         subcategoryKey = string(.subcategoryKey)
     }
 
-    static func decimal(from text: String) -> Decimal? {
+    public static func decimal(from text: String) -> Decimal? {
         let cleaned = text.filter { $0.isNumber || $0 == "." || $0 == "," || $0 == "-" }
         let normal = cleaned.contains(".") ? cleaned.replacingOccurrences(of: ",", with: "") : cleaned.replacingOccurrences(of: ",", with: ".")
         return Decimal(string: normal, locale: Locale(identifier: "en_US_POSIX"))
