@@ -1,0 +1,15 @@
+{
+  "required": ["merchant", "date", "subtotal", "gst", "qst", "total", "card_last4", "supplier_gst_no", "supplier_qst_no"],
+  "fields": {
+    "merchant": "QUINCAILLERIE EXEMPLE",
+    "date": "2026-09-30",
+    "subtotal": 20000,
+    "gst": 1000,
+    "qst": 1995,
+    "total": 22995,
+    "card_last4": "0028",
+    "supplier_gst_no": "100000028",
+    "supplier_qst_no": "1000000028 TQ0001"
+  },
+  "low_confidence": []
+}

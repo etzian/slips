@@ -21,7 +21,7 @@ public enum SlipParser {
         e.supplierGstNo = gstNumber(rows)
         e.supplierQstNo = qstNumber(rows)
         e.merchant = merchant(rows)
-        return e
+        return reconcile(e, rows)
     }
 
     /// The OCR text as one string, rows in reading order, for search and the `ocr_text` column.
@@ -118,6 +118,77 @@ public enum SlipParser {
             return best.0.field(best.1, 0.9)
         }
         return labelledAmount(rows, labels: Labels.paymentFallback, excluding: Labels.totalExclusions, confidence: 0.6)
+    }
+
+    // MARK: - Reconciliation
+
+    /// Cents of slack: printed taxes are rounded per line, totals per slip.
+    static let taxSlack = 1
+    static let sumSlack = 2
+
+    /// When the labelled amounts do not add up (a printer whose amount column sits half a line off its
+    /// labels makes OCR pair each label with its neighbour's amount), looks for the one assignment of
+    /// the amounts printed in the totals block that does: GST = 5 %, QST = 9.975 % (or HST = 13 % / 15 %)
+    /// of the subtotal, and subtotal + taxes + tip = total. Applied only when exactly one exists.
+    static func reconcile(_ e: Extraction, _ rows: [Row]) -> Extraction {
+        guard let total = e.total?.value, !isConsistent(e) else { return e }
+        let labelled = rows.filter { r in
+            [Labels.subtotal, Labels.gst, Labels.qst, Labels.hst, Labels.tip, Labels.total].joined()
+                .contains { r.norm.contains(regex: $0) }
+        }
+        guard let first = labelled.first?.row.index, let last = labelled.last?.row.index else { return e }
+        let block = rows.filter { $0.row.index >= first - 2 && $0.row.index <= last + 1 }
+        var candidates: [(Int, Row)] = []
+        for r in block {
+            for a in amounts(in: r.row.text) where a > 0 && !candidates.contains(where: { $0.0 == a }) {
+                candidates.append((a, r))
+            }
+        }
+        let tip = e.tip?.value ?? 0
+        var solutions: [(sub: (Int, Row), taxes: [(Int, Row)], hst: Bool)] = []
+        for sub in candidates where sub.0 < total {
+            let expectedGST = Int((Double(sub.0) * 0.05).rounded())
+            let expectedQST = Int((Double(sub.0) * 0.09975).rounded())
+            let gst = candidates.first { abs($0.0 - expectedGST) <= taxSlack && $0.0 != sub.0 }
+            let qst = candidates.first { abs($0.0 - expectedQST) <= taxSlack && $0.0 != sub.0 }
+            if let gst, let qst, abs(sub.0 + gst.0 + qst.0 + tip - total) <= sumSlack {
+                solutions.append((sub, [gst, qst], false))
+            }
+            for rate in [0.13, 0.15] {
+                let expected = Int((Double(sub.0) * rate).rounded())
+                if let hst = candidates.first(where: { abs($0.0 - expected) <= taxSlack && $0.0 != sub.0 }),
+                   abs(sub.0 + hst.0 + tip - total) <= sumSlack {
+                    solutions.append((sub, [hst], true))
+                }
+            }
+        }
+        guard solutions.count == 1, let s = solutions.first else { return e }
+        var fixed = e
+        fixed.subtotal = s.sub.1.field(s.sub.0, 0.85)
+        if s.hst {
+            fixed.hst = s.taxes[0].1.field(s.taxes[0].0, 0.85)
+            fixed.gst = nil
+            fixed.qst = nil
+        } else {
+            fixed.gst = s.taxes[0].1.field(s.taxes[0].0, 0.85)
+            fixed.qst = s.taxes[1].1.field(s.taxes[1].0, 0.85)
+            fixed.hst = nil
+        }
+        return fixed
+    }
+
+    /// Subtotal + taxes + tip = total, and no tax above its rate on the subtotal (zero-rated items make a
+    /// tax lower, never higher). Amounts paired with the wrong labels still add up, since they are the
+    /// same numbers; the rate bound is what catches them. True when there is no subtotal to check against.
+    static func isConsistent(_ e: Extraction) -> Bool {
+        guard let total = e.total?.value, let sub = e.subtotal?.value else { return true }
+        let sum = sub + (e.gst?.value ?? 0) + (e.qst?.value ?? 0) + (e.hst?.value ?? 0) + (e.tip?.value ?? 0)
+        guard abs(sum - total) <= sumSlack else { return false }
+        func within(_ tax: Int?, _ rate: Double) -> Bool {
+            guard let tax else { return true }
+            return tax <= Int((Double(sub) * rate).rounded()) + taxSlack
+        }
+        return within(e.gst?.value, 0.05) && within(e.qst?.value, 0.09975) && within(e.hst?.value, 0.15)
     }
 
     // MARK: - Currency
@@ -224,6 +295,12 @@ public enum SlipParser {
         for r in rows {
             if let g = r.norm.regexFirstMatch(#"(?<!\d)(\d{9}) ?RT ?(\d{4})(?!\d)"#) {
                 return r.field("\(g[1]) RT\(g[2])", 0.95)
+            }
+        }
+        // Many terminals print only the 9-digit business number after the label ("TPS: 123456789").
+        for r in rows {
+            if let g = r.norm.regexFirstMatch(#"\b(?:TPS|GST|TPS/TVH|GST/HST)\b\s*(?:NO|#|:)?\s*:?\s*(\d{9})(?!\d)"#) {
+                return r.field(g[1], 0.8)
             }
         }
         return nil
