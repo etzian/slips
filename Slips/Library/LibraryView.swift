@@ -14,6 +14,7 @@ struct LibraryView: View {
     @State private var selection = Set<UUID>()
     @State private var editMode: EditMode = .inactive
     @State private var reload = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -66,7 +67,7 @@ struct LibraryView: View {
             Menu {
                 Button { showExport = true } label: { Label("library.export", systemImage: "square.and.arrow.up.on.square") }
                 Button {
-                    withAnimation { editMode = editMode.isEditing ? .inactive : .active }
+                    withAnimation(reduceMotion ? nil : .default) { editMode = editMode.isEditing ? .inactive : .active }
                     if !editMode.isEditing { selection = [] }
                 } label: {
                     Label(editMode.isEditing ? LocalizedStringKey("library.select.done") : "library.select", systemImage: "checkmark.circle")
@@ -152,9 +153,12 @@ struct WaitingNote: View {
 
 struct LibraryRow: View {
     let item: LibraryItem
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: EZ.Space.sm) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: EZ.Space.xs))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: EZ.Space.sm))
+        layout {
             VStack(alignment: .leading, spacing: EZ.Space.xs2) {
                 Text(item.slip.merchant ?? String(localized: "review.unknownMerchant"))
                     .foregroundStyle(EZ.Color.text)
@@ -165,12 +169,13 @@ struct LibraryRow: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             }
-            Spacer(minLength: EZ.Space.sm)
-            VStack(alignment: .trailing, spacing: EZ.Space.xs2) {
+            if !typeSize.isAccessibilitySize { Spacer(minLength: EZ.Space.sm) }
+            VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: EZ.Space.xs2) {
                 if let total = item.slip.money(item.slip.total) {
                     Text(total.decimal, format: .currency(code: total.currency))
                         .font(.body.monospacedDigit())
                         .foregroundStyle(EZ.Color.text)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 DeliveryBadge(state: item.delivery, hasWarnings: item.slip.decodedChecks.contains { $0.severity >= .warning })
             }

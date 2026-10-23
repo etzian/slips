@@ -681,6 +681,24 @@
         }
       }
     },
+    "capture.sample" : {
+      "comment" : "Debug builds only, for UI tests.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a sample page"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser une page d’exemple"
+          }
+        }
+      }
+    },
     "capture.saving" : {
       "extractionState" : "manual",
       "localizations" : {

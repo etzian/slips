@@ -53,21 +53,12 @@ struct ReviewView: View {
     private func form(_ slip: Binding<Slip>) -> some View {
         Form {
             Section {
-                HStack(alignment: .top, spacing: EZ.Space.md) {
-                    PDFThumbnail(url: model.files.url(for: slip.wrappedValue.pdfPath))
-                    VStack(alignment: .leading, spacing: EZ.Space.xs) {
-                        Text(slip.wrappedValue.merchant ?? String(localized: "review.unknownMerchant"))
-                            .font(.headline)
-                        if let total = slip.wrappedValue.money(slip.wrappedValue.total) {
-                            Text(total.decimal, format: .currency(code: total.currency))
-                                .font(.title3.monospacedDigit())
-                        }
-                        Text("review.pages \(slip.wrappedValue.pageCount)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: EZ.Space.md) { summary(slip.wrappedValue) }
+                    VStack(alignment: .leading, spacing: EZ.Space.md) { summary(slip.wrappedValue) }
                 }
             }
+            .accessibilityElement(children: .combine)
 
             ChecksSection(slip: slip.wrappedValue) { last4 in
                 newPaymentMethod = PaymentMethod(profileId: slip.wrappedValue.profileId, name: "", type: .creditCard, last4: last4,
@@ -82,6 +73,7 @@ struct ReviewView: View {
                     Text("value.choose").tag(Kind?.none)
                     ForEach(Kind.allCases, id: \.self) { Text($0.title).tag(Kind?.some($0)) }
                 }
+                .accessibilityIdentifier("review.kind")
                 if slip.wrappedValue.kind == .enterprise {
                     Picker("field.business", selection: slip.enterpriseId) {
                         Text("value.choose").tag(UUID?.none)
@@ -95,6 +87,7 @@ struct ReviewView: View {
                     }
                 }
                 .disabled(slip.wrappedValue.kind == nil)
+                .accessibilityIdentifier("review.subcategory")
                 Picker("field.paymentMethod", selection: slip.paymentMethodId) {
                     Text("value.none").tag(UUID?.none)
                     ForEach(reference.paymentMethods) { m in
@@ -157,6 +150,23 @@ struct ReviewView: View {
                 .accessibilityIdentifier("review.saveDraft")
             }
             .listRowBackground(Color.clear)
+        }
+    }
+
+    /// Thumbnail, merchant, total and page count; side by side, or stacked at large text sizes.
+    @ViewBuilder private func summary(_ slip: Slip) -> some View {
+        PDFThumbnail(url: model.files.url(for: slip.pdfPath))
+        VStack(alignment: .leading, spacing: EZ.Space.xs) {
+            Text(slip.merchant ?? String(localized: "review.unknownMerchant"))
+                .font(.headline)
+            if let total = slip.money(slip.total) {
+                Text(total.decimal, format: .currency(code: total.currency))
+                    .font(.title3.monospacedDigit())
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text("review.pages \(slip.pageCount)")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -319,6 +329,7 @@ struct DayField: View {
                     day = nil
                 } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        .frame(minWidth: Metrics.minTouchTarget, minHeight: Metrics.minTouchTarget)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel(Text("review.clearDate"))

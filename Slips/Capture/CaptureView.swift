@@ -86,6 +86,13 @@ struct CaptureView: View {
                 }
                 .buttonStyle(.bordered)
                 .accessibilityIdentifier("capture.importImages")
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("-uiTesting") {
+                    // UI tests cannot drive the camera or the photo picker: a synthetic page instead.
+                    Button("capture.sample") { process(images: [SamplePage.image()]) }
+                        .accessibilityIdentifier("capture.sample")
+                }
+                #endif
             }
         }
     }
@@ -143,3 +150,24 @@ struct CaptureView: View {
         }
     }
 }
+
+#if DEBUG
+/// A made-up slip page for UI tests: printed text only, no real data.
+enum SamplePage {
+    static func image() -> UIImage {
+        let size = CGSize(width: 1200, height: 1600)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
+            UIColor.white.setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            let attrs: [NSAttributedString.Key: Any] = [.font: UIFont.monospacedSystemFont(ofSize: 56, weight: .regular),
+                                                        .foregroundColor: UIColor.black]
+            let rows = ["MAGASIN FICTIF", "2026-10-20", "SOUS-TOTAL   10,00", "TPS           0,50", "TVQ           1,00", "TOTAL        11,50"]
+            for (i, row) in rows.enumerated() {
+                NSAttributedString(string: row, attributes: attrs).draw(at: CGPoint(x: 80, y: CGFloat(120 + i * 140)))
+            }
+        }
+    }
+}
+#endif
