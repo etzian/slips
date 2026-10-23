@@ -49,18 +49,26 @@ public struct SlipStore: Sendable {
         database.observe { db in try Slip.fetchOne(db, id: id) }
     }
 
-    /// Pre-fill for the review screen.
-    public func suggestion(for slip: Slip) throws -> Classification {
+    /// Pre-fill for the review screen, with the reason for each field.
+    public func suggestion(for slip: Slip, today: CalendarDay = CalendarDay(Date())) throws -> Suggestion {
         try database.writer.read { db in
             let reference = try ReferenceData.snapshot(profile: slip.profileId, in: db)
-            let norm = slip.merchant.map(MerchantName.normalize) ?? ""
-            let memory = norm.isEmpty ? nil : try MerchantMemory
-                .filter(Column("profile_id") == slip.profileId && Column("merchant_norm") == norm).fetchOne(db)
-            let lastUsed = try MerchantMemory.filter(Column("profile_id") == slip.profileId)
-                .order(Column("last_used_at").desc).fetchOne(db)
-            return Suggestions.suggest(cardLast4: slip.extraction?.cardLast4?.value, merchant: slip.merchant,
-                                       reference: reference, memory: memory, lastUsed: lastUsed)
+            return Suggestions.suggest(cardLast4: slip.extraction?.cardLast4?.value, merchant: slip.merchant, total: slip.total,
+                                       aiSubcategoryKey: slip.aiResult?.extraction.subcategoryKey?.value,
+                                       reference: reference, history: try Self.history(profile: slip.profileId, excluding: slip.id, in: db),
+                                       today: today)
         }
+    }
+
+    /// The profile's filed slips, most recent first (the last 1,000 are plenty to rank by).
+    static func history(profile: UUID, excluding id: UUID, in db: Database) throws -> [HistoryEntry] {
+        try Slip.filter(Column("profile_id") == profile && Column("status") == SlipStatus.ready.rawValue && Column("id") != id)
+            .order(Column("captured_at").desc).limit(1000).fetchAll(db)
+            .map { s in
+                HistoryEntry(merchantNorm: s.merchant.map(MerchantName.normalize) ?? "",
+                             day: s.txnDate ?? CalendarDay(s.capturedAt, calendar: NamingRule.utc), total: s.total, kind: s.kind,
+                             enterpriseId: s.enterpriseId, subcategoryId: s.subcategoryId, paymentMethodId: s.paymentMethodId)
+            }
     }
 
     /// Throws away a capture the user cancelled: its row and its files. Only a draft with no delivery

@@ -69,7 +69,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 |---|---|---|
 | P1 | AI seam in core: assistant protocol, merge, disagreement checks | done |
 | P2 | On-device Foundation Models adapter, on by default | done |
-| P3 | Suggestions from history improved | pending |
+| P3 | Suggestions from history improved | done |
 | P4 | Endpoint settings, consent, masking, data map | pending |
 | P5 | Ollama adapter (LAN) | pending |
 | P6 | Claude API adapter | pending |
@@ -91,7 +91,7 @@ Gate steps 1, 3, 4, 5 exit 0 (138 core tests). No app source changed except the 
 - DEFERRED: none
 - MANUAL: none
 
-### P2 — on-device model · pass (Linux; Mac gate to confirm) · 2026-10-23
+### P2 — on-device model · pass (Mac gate green after fix c499b99) · 2026-10-23 · commit f147580
 
 Gate steps 1, 3, 4, 5 exit 0 (143 core tests). App sources parse-checked only.
 
@@ -105,3 +105,15 @@ Gate steps 1, 3, 4, 5 exit 0 (143 core tests). App sources parse-checked only.
 - DECISIONS: One prompt and one answer shape for every assistant (`AssistantPrompt.version` 1), amounts generated as text and converted in the core; model confidence fixed at 0.7. The model never delays the save: it starts after the review opens; failures and timeouts are logged privately and ignored. On the review screen a late result fills a field only if the user has not touched it since the screen loaded.
 - DEFERRED: none
 - MANUAL: on the Mac with Apple Intelligence on, run the simulator (macOS 26 shares the model with the simulator only if supported; otherwise "My Mac (Designed for iPhone)" or wait for the iPhone): import a few synthetic slips, check the sparkles and any `ai_disagrees_*` checks; turn the switch off and check nothing runs
+
+### P3 — suggestions from history · pass (Linux; Mac gate to confirm) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (145 core tests). App sources parse-checked only.
+
+- CHANGED: core `Classification/Suggestions.swift` (`HistoryEntry`, `Suggestion` with per-field
+  `SuggestionReason`, tiered ranking), `SlipStore.suggestion` returns a `Suggestion` built from the
+  profile's filed slips (last 1,000) and the AI's sub-category key; tests rewritten; review screen shows
+  "suggested because…" under each pre-filled picker while it keeps the suggested value; 5 catalog keys
+- DECISIONS: Tiers, best first, each field taking the first that gives an active value fitting the kind: card (payment method + its default kind/business) → same merchant (recency weight, half-life 90 days, majority by weight, tie to the most recent) → similar total ±25 % with the same payment method → most recent filed slip → AI key (sub-category only). History comes from filed (`ready`) slips, no longer from `merchant_memory` (still written; may be dropped later).
+- DEFERRED: none
+- MANUAL: none

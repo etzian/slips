@@ -21,6 +21,8 @@ struct ReviewView: View {
     @State private var reload = 0
     @State private var newPaymentMethod: PaymentMethod?
     @State private var confirmDiscard = false
+    /// What the pickers were pre-filled with, and why; nil when the slip was already classified.
+    @State private var suggestion: Suggestion?
 
     var body: some View {
         Group {
@@ -96,11 +98,13 @@ struct ReviewView: View {
                     ForEach(Kind.allCases, id: \.self) { Text($0.title).tag(Kind?.some($0)) }
                 }
                 .accessibilityIdentifier("review.kind")
+                reason(.kind, still: slip.wrappedValue.kind == suggestion?.classification.kind)
                 if slip.wrappedValue.kind == .enterprise {
                     Picker("field.business", selection: slip.enterpriseId) {
                         Text("value.choose").tag(UUID?.none)
                         ForEach(reference.enterprises) { Text($0.name).tag(UUID?.some($0.id)) }
                     }
+                    reason(.business, still: slip.wrappedValue.enterpriseId == suggestion?.classification.enterpriseId)
                 }
                 Picker("field.subcategory", selection: slip.subcategoryId) {
                     Text("value.choose").tag(UUID?.none)
@@ -110,12 +114,14 @@ struct ReviewView: View {
                 }
                 .disabled(slip.wrappedValue.kind == nil)
                 .accessibilityIdentifier("review.subcategory")
+                reason(.subcategory, still: slip.wrappedValue.subcategoryId == suggestion?.classification.subcategoryId)
                 Picker("field.paymentMethod", selection: slip.paymentMethodId) {
                     Text("value.none").tag(UUID?.none)
                     ForEach(reference.paymentMethods) { m in
                         Text(m.last4.map { "\(m.name) ····\($0)" } ?? m.name).tag(UUID?.some(m.id))
                     }
                 }
+                reason(.paymentMethod, still: slip.wrappedValue.paymentMethodId == suggestion?.classification.paymentMethodId)
             }
 
             Section("review.details") {
@@ -201,6 +207,20 @@ struct ReviewView: View {
     private func amount(_ label: LocalizedStringKey, _ value: Binding<Int?>, _ low: Bool, _ ai: Bool, _ currency: String) -> some View {
         FieldRow(label: label, low: low, ai: ai) {
             MoneyField(label: label, minorUnits: value, currency: currency)
+        }
+    }
+
+    /// "Suggested because…" under a picker, while it still holds the suggested value.
+    @ViewBuilder private func reason(_ field: SuggestedField, still: Bool) -> some View {
+        if still, let why = suggestion?.reasons[field] {
+            Label {
+                Text(why.text)
+            } icon: {
+                Image(systemName: why == .ai ? "sparkles" : "lightbulb")
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -294,10 +314,11 @@ struct ReviewView: View {
             reference = try model.reference.snapshot(profile: slip.profileId)
             if slip.kind == nil && slip.subcategoryId == nil && slip.paymentMethodId == nil {
                 let s = try model.slips.suggestion(for: slip)
-                slip.kind = s.kind
-                slip.enterpriseId = s.enterpriseId
-                slip.subcategoryId = s.subcategoryId
-                slip.paymentMethodId = s.paymentMethodId
+                suggestion = s
+                slip.kind = s.classification.kind
+                slip.enterpriseId = s.classification.enterpriseId
+                slip.subcategoryId = s.classification.subcategoryId
+                slip.paymentMethodId = s.classification.paymentMethodId
             }
             slip.setChecks(try model.slips.checks(for: slip))
             draft = slip
@@ -442,6 +463,18 @@ extension Binding where Value == String? {
             wrappedValue ?? ""
         } set: {
             wrappedValue = $0.isEmpty ? nil : $0
+        }
+    }
+}
+
+extension SuggestionReason {
+    var text: LocalizedStringKey {
+        switch self {
+        case .card(let last4): "suggestion.card \(last4)"
+        case .merchantHistory(let count): "suggestion.merchant \(count)"
+        case .similarAmount: "suggestion.amount"
+        case .lastUsed: "suggestion.lastUsed"
+        case .ai: "suggestion.ai"
         }
     }
 }

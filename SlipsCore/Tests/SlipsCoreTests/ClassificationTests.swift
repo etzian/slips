@@ -19,6 +19,7 @@ import Testing
     let shop = UUID(), studio = UUID()
     let groceries = UUID(), software = UUID(), transfer = UUID(), dining = UUID()
     let visa = UUID(), debit = UUID()
+    let today = CalendarDay(year: 2026, month: 10, day: 23)!
 
     var reference: ReferenceSnapshot {
         ReferenceSnapshot(
@@ -36,48 +37,99 @@ import Testing
             ])
     }
 
-    func memory(_ kind: Kind?, enterprise: UUID? = nil, sub: UUID? = nil, method: UUID? = nil) -> MerchantMemory {
-        MerchantMemory(profileId: profile, merchantNorm: "x", kind: kind, enterpriseId: enterprise, subcategoryId: sub, paymentMethodId: method)
+    func h(_ merchant: String, daysAgo: Int, total: Int? = nil, _ kind: Kind?, business: UUID? = nil, sub: UUID? = nil,
+           method: UUID? = nil) -> HistoryEntry {
+        let date = Calendar(identifier: .gregorian).date(byAdding: .day, value: -daysAgo, to: today.date(in: NamingRule.utc))!
+        return HistoryEntry(merchantNorm: MerchantName.normalize(merchant), day: CalendarDay(date, calendar: NamingRule.utc),
+                            total: total, kind: kind, enterpriseId: business, subcategoryId: sub, paymentMethodId: method)
     }
 
-    @Test func cardDefaultsWinOverMemory() {
-        let c = Suggestions.suggest(cardLast4: "0042", merchant: "Fake", reference: reference,
-                                    memory: memory(.personal, sub: groceries, method: debit), lastUsed: nil)
-        #expect(c.paymentMethodId == visa)
-        #expect(c.kind == .enterprise)
-        #expect(c.enterpriseId == studio)
-        // The memory's personal sub-category does not fit an enterprise slip.
-        #expect(c.subcategoryId == nil)
+    func suggest(card: String? = nil, merchant: String? = "Fake Store", total: Int? = nil, ai: String? = nil,
+                 _ history: [HistoryEntry]) -> Suggestion {
+        Suggestions.suggest(cardLast4: card, merchant: merchant, total: total, aiSubcategoryKey: ai, reference: reference,
+                            history: history, today: today)
     }
 
-    @Test func memoryFillsWhatTheCardLeaves() {
-        let c = Suggestions.suggest(cardLast4: "0042", merchant: "Fake", reference: reference,
-                                    memory: memory(.enterprise, enterprise: shop, sub: software), lastUsed: nil)
-        #expect(c.enterpriseId == studio)
-        #expect(c.subcategoryId == software)
+    @Test func cardDefaultsWinOverHistory() {
+        let s = suggest(card: "0042", [h("Fake Store", daysAgo: 1, .personal, sub: groceries, method: debit)])
+        #expect(s.classification.paymentMethodId == visa)
+        #expect(s.classification.kind == .enterprise)
+        #expect(s.classification.enterpriseId == studio)
+        #expect(s.reasons[.kind] == .card("0042"))
+        // The merchant's personal sub-category does not fit an enterprise slip, and nothing else does.
+        #expect(s.classification.subcategoryId == nil)
     }
 
-    @Test func memoryWithoutCard() {
-        let c = Suggestions.suggest(cardLast4: nil, merchant: "Fake", reference: reference,
-                                    memory: memory(.personal, sub: dining, method: debit), lastUsed: memory(.enterprise, enterprise: shop))
-        #expect(c == Classification(kind: .personal, subcategoryId: dining, paymentMethodId: debit))
+    @Test func merchantHistoryMajorityAndRecency() {
+        let history = [
+            h("Fake Store #1", daysAgo: 400, .personal, sub: dining),
+            h("FAKE STORE", daysAgo: 300, .personal, sub: dining),
+            h("Fake Store", daysAgo: 5, .personal, sub: groceries),
+            h("Other", daysAgo: 1, .enterprise, business: shop, sub: software),
+        ]
+        let s = suggest(history)
+        // Two old dining slips weigh less than one recent groceries slip (half-life 90 days).
+        #expect(s.classification.subcategoryId == groceries)
+        #expect(s.classification.kind == .personal)
+        #expect(s.reasons[.subcategory] == .merchantHistory(3))
     }
 
-    @Test func lastUsedIsTheLastResort() {
-        let c = Suggestions.suggest(cardLast4: "9999", merchant: nil, reference: reference, memory: nil,
-                                    lastUsed: memory(.enterprise, enterprise: shop, sub: transfer, method: visa))
-        #expect(c == Classification(kind: .enterprise, enterpriseId: shop, subcategoryId: transfer, paymentMethodId: visa))
+    @Test func majorityWinsAtTheSameAge() {
+        let history = [
+            h("Fake Store", daysAgo: 10, .personal, sub: dining),
+            h("Fake Store", daysAgo: 10, .personal, sub: dining),
+            h("Fake Store", daysAgo: 10, .personal, sub: groceries),
+        ]
+        #expect(suggest(history).classification.subcategoryId == dining)
+    }
+
+    @Test func tieGoesToTheMostRecent() {
+        let history = [h("Fake Store", daysAgo: 3, .personal, sub: dining), h("Fake Store", daysAgo: 2, .personal, sub: groceries)]
+        let a = Suggestions.weight(history[0].day, today: today), b = Suggestions.weight(history[1].day, today: today)
+        #expect(b > a)
+        #expect(suggest(history).classification.subcategoryId == groceries)
+    }
+
+    @Test func similarAmountWithTheSameCard() {
+        let history = [
+            h("Gas A", daysAgo: 20, total: 6000, .enterprise, business: shop, sub: software, method: debit),
+            h("Gas B", daysAgo: 30, total: 6500, .enterprise, business: shop, sub: software, method: debit),
+            h("Cafe", daysAgo: 1, total: 500, .personal, sub: dining, method: debit),
+        ]
+        let s = suggest(card: "0007", merchant: "Unknown Gas", total: 6200, history)
+        // The card's default kind is personal; the business pick only applies to enterprise slips.
+        #expect(s.classification.kind == .personal)
+        #expect(s.classification.subcategoryId == dining) // from "last used": software does not fit personal
+        let noCard = suggest(merchant: "Unknown Gas", total: 6200, history)
+        #expect(noCard.classification.kind == .enterprise)
+        #expect(noCard.classification.enterpriseId == shop)
+        #expect(noCard.reasons[.kind] == .similarAmount)
+    }
+
+    @Test func lastUsedThenAI() {
+        let s = suggest(merchant: "New Place", [h("Old Place", daysAgo: 2, .personal, sub: dining, method: debit)])
+        #expect(s.classification.kind == .personal)
+        #expect(s.reasons[.kind] == .lastUsed)
+        #expect(s.classification.paymentMethodId == debit)
+        let empty = suggest(card: "0007", merchant: "New Place", ai: "personal.groceries", [])
+        #expect(empty.classification.subcategoryId == groceries)
+        #expect(empty.reasons[.subcategory] == .ai)
+        // An AI key that does not fit the kind is ignored.
+        let wrong = suggest(card: "0007", merchant: "New Place", ai: "enterprise.software", [])
+        #expect(wrong.classification.subcategoryId == nil)
     }
 
     @Test func archivedValuesAreNotSuggested() {
         let gone = UUID()
-        let c = Suggestions.suggest(cardLast4: nil, merchant: "Fake", reference: reference,
-                                    memory: memory(.enterprise, enterprise: gone, sub: gone, method: gone), lastUsed: nil)
-        #expect(c == Classification(kind: .enterprise))
+        let s = suggest([h("Fake Store", daysAgo: 1, .enterprise, business: gone, sub: gone, method: gone)])
+        #expect(s.classification.kind == .enterprise)
+        #expect(s.classification.enterpriseId == nil)
+        #expect(s.classification.subcategoryId == nil)
+        #expect(s.classification.paymentMethodId == nil)
     }
 
     @Test func nothingKnown() {
-        #expect(Suggestions.suggest(cardLast4: nil, merchant: nil, reference: reference, memory: nil, lastUsed: nil) == Classification())
+        #expect(suggest(merchant: nil, []).classification == Classification())
     }
 }
 
@@ -143,7 +195,9 @@ import Testing
         #expect(memory?.merchantNorm == "epicerie fictive")
         #expect(memory?.uses == 2)
         let next = try draft(merchant: "EPICERIE FICTIVE #99")
-        #expect(try store.suggestion(for: next) == Classification(kind: .personal, subcategoryId: groceries))
+        let suggestion = try store.suggestion(for: next)
+        #expect(suggestion.classification == Classification(kind: .personal, subcategoryId: groceries))
+        #expect(suggestion.reasons[.subcategory] == .merchantHistory(1))
     }
 
     @Test func readyRefusedWhenIncompleteOrBlocked() throws {

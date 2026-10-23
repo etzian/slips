@@ -5586,6 +5586,115 @@
         }
       }
     },
+    "suggestion.ai" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggested by the AI"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggéré par l’IA"
+          }
+        }
+      }
+    },
+    "suggestion.amount" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From slips with a similar amount"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’après les reçus d’un montant semblable"
+          }
+        }
+      }
+    },
+    "suggestion.card %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From the card ending in %@"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’après la carte se terminant par %@"
+          }
+        }
+      }
+    },
+    "suggestion.lastUsed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your last choice"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre dernier choix"
+          }
+        }
+      }
+    },
+    "suggestion.merchant %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From your %lld slip from this merchant"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From your %lld slips from this merchant"
+                }
+              }
+            }
+          }
+        },
+        "fr-CA" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "D’après votre reçu de ce commerçant"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "D’après vos %lld reçus de ce commerçant"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "tab.capture" : {
       "extractionState" : "manual",
       "localizations" : {
