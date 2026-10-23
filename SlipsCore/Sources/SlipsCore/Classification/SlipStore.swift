@@ -37,7 +37,7 @@ public struct SlipStore: Sendable {
             duplicate = same.contains { $0.merchant.map(MerchantName.normalize) == norm }
         }
         let context = SlipChecks.Context(today: today, knownLastFours: Set(lastFours), duplicateExists: duplicate,
-                                         fileExists: files.exists(slip.pdfPath))
+                                         fileExists: files.exists(slip.pdfPath), ai: slip.aiResult?.extraction)
         return SlipChecks.run(slip, context: context)
     }
 
@@ -76,6 +76,26 @@ public struct SlipStore: Sendable {
         }
         // Row first, then the file: a crash in between leaves an orphan folder, which the sweep removes.
         if let profile { try files.removeSlip(profile: profile, slip: id) }
+    }
+
+    /// Records an assistant's reading: stored on the slip; on a draft it fills the gaps (`AIMerge`);
+    /// checks are recomputed so disagreements show. A filed slip only gets the reading and the checks.
+    @discardableResult
+    public func recordAI(_ extraction: AIExtraction, assistant: String, model: String? = nil, for id: UUID,
+                         now: Date = Date()) throws -> Slip? {
+        try database.writer.write { db in
+            guard var slip = try Slip.fetchOne(db, id: id) else { return nil }
+            let clean = AIMerge.sanitized(extraction)
+            var filled: [String] = []
+            if slip.status == .draft {
+                (slip, filled) = AIMerge.merge(clean, into: slip)
+            }
+            slip.ai = AIResult(assistant: assistant, model: model, at: now, extraction: clean, filled: filled).json
+            slip.setChecks(try Self.checks(for: slip, today: CalendarDay(now), files: files, in: db))
+            slip.updatedAt = now
+            try slip.update(db)
+            return slip
+        }
     }
 
     /// Saves the fields without filing: a draft stays a draft and gets no delivery.

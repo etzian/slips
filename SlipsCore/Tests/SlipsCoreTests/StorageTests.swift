@@ -6,7 +6,7 @@ import Testing
 @Suite struct MigrationTests {
     @Test func migratesFromEmpty() throws {
         let db = try AppDatabase.inMemory()
-        #expect(try db.appliedMigrations() == ["v1_initial", "v2_fts"])
+        #expect(try db.appliedMigrations() == ["v1_initial", "v2_fts", "v3_ai"])
         let tables = try db.writer.read { db in
             try String.fetchAll(db, sql: "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
         }
@@ -32,7 +32,7 @@ import Testing
         let db = try AppDatabase.onDisk(directory: dir)
         let mode = try db.writer.read { try String.fetchOne($0, sql: "PRAGMA journal_mode") }
         #expect(mode == "wal")
-        #expect(try db.appliedMigrations() == ["v1_initial", "v2_fts"])
+        #expect(try db.appliedMigrations() == ["v1_initial", "v2_fts", "v3_ai"])
     }
 }
 

@@ -1,6 +1,6 @@
 # STATE
 
-STATUS: PENDING
+STATUS: RUNNING
 <!-- PENDING | RUNNING | DONE | BLOCKED -->
 
 M2 — On-device AI, suggestions, optional endpoints. Spec: `.claude/plan/PHASES.md`.
@@ -67,7 +67,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 
 | # | Slice | Status |
 |---|---|---|
-| P1 | AI seam in core: assistant protocol, merge, disagreement checks | pending |
+| P1 | AI seam in core: assistant protocol, merge, disagreement checks | done |
 | P2 | On-device Foundation Models adapter, on by default | pending |
 | P3 | Suggestions from history improved | pending |
 | P4 | Endpoint settings, consent, masking, data map | pending |
@@ -78,3 +78,15 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P9 | Polish: fr-CA parity, docs, legal assessment, v0.0.2 | pending |
 
 ## Handoff log
+
+### P1 — AI seam · pass (Linux; Mac gate to confirm) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (138 core tests). No app source changed except the catalog.
+
+- CHANGED: migration `v3_ai` (`slips.ai` TEXT); `Slip.ai` + `aiResult`; `SlipsCore/AI/ExtractionAssistant.swift`
+  (`AssistantInput`, `AIExtraction`, `ExtractionAssistant`, `AIResult`, `AIMerge.merge`/`sanitized`);
+  `SlipChecks` context `ai` + `ai_disagrees_total` (warning), `_date`, `_merchant`, `_taxes` (info);
+  `SlipStore.recordAI`; `AITests.swift` (`FakeAssistant`); 4 catalog keys
+- DECISIONS: A field is filled by the assistant only if the slip's value is empty, or equals the parser's reading and that reading is low-confidence; a value different from the parser's counts as typed by the user and is never touched. Filled field names are kept in `AIResult.filled`. On a filed (`ready`) slip the reading is stored and raises checks but fills nothing. `sanitized` drops sub-category keys outside `Seed.allKeys`, negative amounts and non-ISO currencies. Disagreement tolerances: total > 2 ¢ (warning), any tax > 1 ¢, date different, merchant names that neither contain the other after normalisation (info). The check shows the assistant's value; the slip's stands.
+- DEFERRED: none
+- MANUAL: none

@@ -126,6 +126,8 @@ public struct Slip: SlipsRecord, Identifiable, Hashable {
     public var notes: String?
     /// Results of `SlipChecks`, JSON.
     public var checks: String?
+    /// The latest AI assistant result (`AIResult`), JSON. Nil when no assistant ran.
+    public var ai: String?
     public var updatedAt: Date
 
     public init(id: UUID = UUID(), profileId: UUID, status: SlipStatus = .draft, capturedAt: Date = Date(),

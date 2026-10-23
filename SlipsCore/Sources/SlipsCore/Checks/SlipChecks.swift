@@ -12,9 +12,12 @@ public enum SlipChecks {
         /// Another slip of the profile has the same merchant, date and total.
         public var duplicateExists: Bool
         public var fileExists: Bool
+        /// What an AI assistant read on the slip, to compare with the slip's values.
+        public var ai: AIExtraction?
 
         public init(today: CalendarDay, maxAgeYears: Int = 2, knownLastFours: Set<String> = [],
-                    duplicateExists: Bool = false, fileExists: Bool = true) {
+                    duplicateExists: Bool = false, fileExists: Bool = true, ai: AIExtraction? = nil) {
+            self.ai = ai
             self.today = today
             self.maxAgeYears = maxAgeYears
             self.knownLastFours = knownLastFours
@@ -33,6 +36,10 @@ public enum SlipChecks {
         public static let registrationMissing = "registration_missing"
         public static let duplicate = "duplicate"
         public static let fileMissing = "file_missing"
+        public static let aiDisagreesTotal = "ai_disagrees_total"
+        public static let aiDisagreesDate = "ai_disagrees_date"
+        public static let aiDisagreesMerchant = "ai_disagrees_merchant"
+        public static let aiDisagreesTaxes = "ai_disagrees_taxes"
     }
 
     /// Cents of slack for rounding on sums.
@@ -41,7 +48,7 @@ public enum SlipChecks {
     public static func run(_ slip: Slip, context: Context) -> [Check] {
         let rules: [(Slip, Context) -> Check?] = [fileMissing, totalMissing, sumMismatch, taxRate, dateRange,
                                                   cardUnknown, registrationMissing, duplicate]
-        return rules.compactMap { $0(slip, context) }
+        return (rules.compactMap { $0(slip, context) } + aiDisagreements(slip, context))
             .enumerated().sorted { ($0.element.severity, -$0.offset) > ($1.element.severity, -$1.offset) }.map(\.element)
     }
 
@@ -109,6 +116,30 @@ public enum SlipChecks {
         let qstMissing = slip.hst == nil && (slip.supplierQstNo ?? "").isEmpty
         guard gstMissing || qstMissing else { return nil }
         return Check(code: Code.registrationMissing, severity: .warning)
+    }
+
+    /// Where the assistant read something else than what the slip says. The slip's value stands; the
+    /// check shows the assistant's reading so the user can look at the paper.
+    static func aiDisagreements(_ slip: Slip, _ c: Context) -> [Check] {
+        guard let ai = c.ai else { return [] }
+        var found: [Check] = []
+        if let a = ai.total?.value, let s = slip.total, abs(a - s) > sumTolerance {
+            found.append(Check(code: Code.aiDisagreesTotal, severity: .warning, values: [.money(a, currency: slip.currency)]))
+        }
+        if let a = ai.date?.value, let s = slip.txnDate, a != s {
+            found.append(Check(code: Code.aiDisagreesDate, severity: .info, values: [.day(a)]))
+        }
+        if let a = ai.merchant?.value, let s = slip.merchant {
+            let an = MerchantName.normalize(a), sn = MerchantName.normalize(s)
+            if !an.isEmpty, !sn.isEmpty, !an.contains(sn), !sn.contains(an) {
+                found.append(Check(code: Code.aiDisagreesMerchant, severity: .info, values: [.text(a)]))
+            }
+        }
+        let pairs: [(Int?, Int?)] = [(ai.gst?.value, slip.gst), (ai.qst?.value, slip.qst), (ai.hst?.value, slip.hst)]
+        if pairs.contains(where: { a, s in a != nil && s != nil && abs(a! - s!) > 1 }) {
+            found.append(Check(code: Code.aiDisagreesTaxes, severity: .info))
+        }
+        return found
     }
 
     static func duplicate(_ slip: Slip, _ c: Context) -> Check? {

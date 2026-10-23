@@ -767,6 +767,74 @@
         }
       }
     },
+    "check.ai_disagrees_date" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The AI read the date as %@. Check it against the slip."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’IA a lu la date du %@. Vérifiez-la sur le reçu."
+          }
+        }
+      }
+    },
+    "check.ai_disagrees_merchant" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The AI read the merchant as “%@”."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’IA a lu le commerçant « %@ »."
+          }
+        }
+      }
+    },
+    "check.ai_disagrees_taxes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The AI read different tax amounts. Check them against the slip."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’IA a lu d’autres montants de taxes. Vérifiez-les sur le reçu."
+          }
+        }
+      }
+    },
+    "check.ai_disagrees_total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The AI read a total of %@. Check it against the slip."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’IA a lu un total de %@. Vérifiez-le sur le reçu."
+          }
+        }
+      }
+    },
     "check.card_unknown" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -9,6 +9,10 @@ enum Migrations {
         migrator.registerMigration("v2_fts") { db in
             try db.execute(sql: v2FTS)
         }
+        migrator.registerMigration("v3_ai") { db in
+            // What an AI assistant said about the slip (`AIResult` JSON), kept apart from the parser's output.
+            try db.execute(sql: "ALTER TABLE slips ADD COLUMN ai TEXT")
+        }
     }
 
     /// Plan §3. Ids are UUIDs (16-byte blobs, GRDB's default), dates are GRDB date strings (UTC),
