@@ -44,6 +44,12 @@ struct ReviewView: View {
         }
         .errorAlert($error)
         .task(id: reload) { load() }
+        .task {
+            // The on-device model may finish after the screen opened: take what it filled.
+            for await stored in model.slips.observeSlip(slipId).ignoringErrors() {
+                if let stored { takeAIResult(from: stored) }
+            }
+        }
         .onChange(of: draft) { _, edited in
             // Checks follow every edit.
             guard var slip = edited, let checks = try? model.slips.checks(for: slip) else { return }
@@ -113,13 +119,13 @@ struct ReviewView: View {
             }
 
             Section("review.details") {
-                FieldRow(label: "field.merchant", low: low(\.merchant)) {
+                FieldRow(label: "field.merchant", low: low(\.merchant), ai: aiFilled("merchant")) {
                     TextField("field.merchant", text: slip.merchant.orEmpty)
                 }
-                FieldRow(label: "field.date", low: low(\.date)) {
+                FieldRow(label: "field.date", low: low(\.date), ai: aiFilled("date")) {
                     DayField(day: slip.txnDate)
                 }
-                FieldRow(label: "field.currency", low: low(\.currency)) {
+                FieldRow(label: "field.currency", low: low(\.currency), ai: aiFilled("currency")) {
                     TextField("field.currency", text: slip.currency)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
@@ -127,19 +133,19 @@ struct ReviewView: View {
             }
 
             Section("review.amounts") {
-                amount("field.subtotal", slip.subtotal, low(\.subtotal), slip.wrappedValue.currency)
-                amount("field.gst", slip.gst, low(\.gst), slip.wrappedValue.currency)
-                amount("field.qst", slip.qst, low(\.qst), slip.wrappedValue.currency)
-                amount("field.hst", slip.hst, low(\.hst), slip.wrappedValue.currency)
-                amount("field.tip", slip.tip, low(\.tip), slip.wrappedValue.currency)
-                amount("field.total", slip.total, low(\.total), slip.wrappedValue.currency)
+                amount("field.subtotal", slip.subtotal, low(\.subtotal), aiFilled("subtotal"), slip.wrappedValue.currency)
+                amount("field.gst", slip.gst, low(\.gst), aiFilled("gst"), slip.wrappedValue.currency)
+                amount("field.qst", slip.qst, low(\.qst), aiFilled("qst"), slip.wrappedValue.currency)
+                amount("field.hst", slip.hst, low(\.hst), aiFilled("hst"), slip.wrappedValue.currency)
+                amount("field.tip", slip.tip, low(\.tip), aiFilled("tip"), slip.wrappedValue.currency)
+                amount("field.total", slip.total, low(\.total), aiFilled("total"), slip.wrappedValue.currency)
             }
 
             Section("review.registration") {
-                FieldRow(label: "field.gstNumber", low: low(\.supplierGstNo)) {
+                FieldRow(label: "field.gstNumber", low: low(\.supplierGstNo), ai: aiFilled("supplier_gst_no")) {
                     TextField("field.gstNumber", text: slip.supplierGstNo.orEmpty)
                 }
-                FieldRow(label: "field.qstNumber", low: low(\.supplierQstNo)) {
+                FieldRow(label: "field.qstNumber", low: low(\.supplierQstNo), ai: aiFilled("supplier_qst_no")) {
                     TextField("field.qstNumber", text: slip.supplierQstNo.orEmpty)
                 }
             }
@@ -192,10 +198,15 @@ struct ReviewView: View {
         }
     }
 
-    private func amount(_ label: LocalizedStringKey, _ value: Binding<Int?>, _ low: Bool, _ currency: String) -> some View {
-        FieldRow(label: label, low: low) {
+    private func amount(_ label: LocalizedStringKey, _ value: Binding<Int?>, _ low: Bool, _ ai: Bool, _ currency: String) -> some View {
+        FieldRow(label: label, low: low, ai: ai) {
             MoneyField(label: label, minorUnits: value, currency: currency)
         }
+    }
+
+    /// The field was filled by the AI assistant (and not changed since).
+    private func aiFilled(_ name: String) -> Bool {
+        draft?.aiResult?.filled.contains(name) ?? false
     }
 
     private func low<V>(_ field: KeyPath<Extraction, ExtractedField<V>?>) -> Bool {
@@ -231,6 +242,35 @@ struct ReviewView: View {
     }
 
     // MARK: Load and save
+
+    /// Applies an assistant result that arrived while the screen is open: each field it filled is
+    /// copied only if the user has not changed that field here since the screen loaded.
+    private func takeAIResult(from stored: Slip) {
+        guard var d = draft, let original = state.value, stored.ai != nil, stored.ai != d.ai else { return }
+        func take<V: Equatable>(_ kp: WritableKeyPath<Slip, V?>) {
+            if d[keyPath: kp] == original[keyPath: kp] { d[keyPath: kp] = stored[keyPath: kp] }
+        }
+        for name in stored.aiResult?.filled ?? [] {
+            switch name {
+            case "merchant": take(\.merchant)
+            case "date": take(\.txnDate)
+            case "subtotal": take(\.subtotal)
+            case "gst": take(\.gst)
+            case "qst": take(\.qst)
+            case "hst": take(\.hst)
+            case "tip": take(\.tip)
+            case "total": take(\.total)
+            case "supplier_gst_no": take(\.supplierGstNo)
+            case "supplier_qst_no": take(\.supplierQstNo)
+            default: break
+            }
+        }
+        d.ai = stored.ai
+        var baseline = original
+        baseline.ai = stored.ai
+        state = .loaded(baseline)
+        draft = d
+    }
 
     /// After a payment method was created from a check: reload the pickers and pick the new card.
     private func refreshReference() {
@@ -293,6 +333,7 @@ struct ReviewView: View {
 struct FieldRow<Content: View>: View {
     let label: LocalizedStringKey
     let low: Bool
+    var ai: Bool = false
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -301,6 +342,11 @@ struct FieldRow<Content: View>: View {
         } label: {
             HStack(spacing: EZ.Space.xs2) {
                 Text(label)
+                if ai {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(.tint)
+                        .accessibilityLabel(Text("review.aiFilled"))
+                }
                 if low {
                     Image(systemName: "exclamationmark.circle.fill")
                         .foregroundStyle(EZ.Color.warning)

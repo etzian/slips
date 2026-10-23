@@ -191,18 +191,34 @@ struct CaptureView: View {
             }
             phase = .reading
             let (slip, pages) = saved
+            var input: AssistantInput?
             do {
-                try await Task.detached(priority: .userInitiated) {
+                input = try await Task.detached(priority: .userInitiated) { () throws -> AssistantInput in
                     let lines = try OCRService.recognize(pages: pages)
                     let searchable = try PDFBuilder.pdf(pages: pages, text: OCRService.pageText(lines, pageCount: pages.count))
                     try store.replacePDF(of: slip.id, with: searchable)
                     let extraction = SlipParser.parse(lines, today: CalendarDay(Date()))
-                    try store.recordExtraction(extraction, ocrText: SlipParser.text(of: lines), for: slip.id)
+                    let text = SlipParser.text(of: lines)
+                    try store.recordExtraction(extraction, ocrText: text, for: slip.id)
+                    return AssistantInput(ocrText: text, localeIdentifier: Locale.current.identifier,
+                                          currencyHint: extraction.currency?.value)
                 }.value
             } catch {
                 AppModel.log.error("reading failed: \(String(describing: error), privacy: .private)")
             }
             phase = .saved(slip)
+            // The slip is saved and on screen; the on-device model proofreads it in the background.
+            if let input, !input.ocrText.isEmpty, let assistant = OnDeviceAI.assistant() {
+                let slips = model.slips
+                Task.detached(priority: .utility) {
+                    do {
+                        let reading = try await withTimeout(OnDeviceAI.timeout) { try await assistant.extract(input) }
+                        try slips.recordAI(reading, assistant: assistant.id, for: slip.id)
+                    } catch {
+                        AppModel.log.notice("on-device AI skipped: \(String(describing: error), privacy: .private)")
+                    }
+                }
+            }
         }
     }
 }

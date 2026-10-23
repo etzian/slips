@@ -68,7 +68,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | # | Slice | Status |
 |---|---|---|
 | P1 | AI seam in core: assistant protocol, merge, disagreement checks | done |
-| P2 | On-device Foundation Models adapter, on by default | pending |
+| P2 | On-device Foundation Models adapter, on by default | done |
 | P3 | Suggestions from history improved | pending |
 | P4 | Endpoint settings, consent, masking, data map | pending |
 | P5 | Ollama adapter (LAN) | pending |
@@ -79,7 +79,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 
 ## Handoff log
 
-### P1 — AI seam · pass (Linux; Mac gate to confirm) · 2026-10-23
+### P1 — AI seam · pass (Linux; Mac gate to confirm) · 2026-10-23 · commit d93d501
 
 Gate steps 1, 3, 4, 5 exit 0 (138 core tests). No app source changed except the catalog.
 
@@ -90,3 +90,18 @@ Gate steps 1, 3, 4, 5 exit 0 (138 core tests). No app source changed except the 
 - DECISIONS: A field is filled by the assistant only if the slip's value is empty, or equals the parser's reading and that reading is low-confidence; a value different from the parser's counts as typed by the user and is never touched. Filled field names are kept in `AIResult.filled`. On a filed (`ready`) slip the reading is stored and raises checks but fills nothing. `sanitized` drops sub-category keys outside `Seed.allKeys`, negative amounts and non-ISO currencies. Disagreement tolerances: total > 2 ¢ (warning), any tax > 1 ¢, date different, merchant names that neither contain the other after normalisation (info). The check shows the assistant's value; the slip's stands.
 - DEFERRED: none
 - MANUAL: none
+
+### P2 — on-device model · pass (Linux; Mac gate to confirm) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (143 core tests). App sources parse-checked only.
+
+- CHANGED: core `AI/AssistantPrompt.swift` (shared instructions with fin's keys, user message, JSON schema,
+  `AssistantReading` lenient decoding → `AIExtraction`) + tests; app `AI/OnDeviceAssistant.swift`
+  (`OnDeviceAI` status/switch, `@Generable GeneratedSlipReading`, `OnDeviceAssistant`, `withTimeout`),
+  capture runs it in the background after OCR (30 s limit) and `recordAI`s the result; review screen marks
+  AI-filled fields (sparkles) and takes a result that arrives while it is open; Settings › Privacy › AI
+  switch (on by default) with the availability reason; `SlipsTests/OnDeviceAITests.swift`; data map
+  `automated_processing.ai_on_device`; 10 catalog keys
+- DECISIONS: One prompt and one answer shape for every assistant (`AssistantPrompt.version` 1), amounts generated as text and converted in the core; model confidence fixed at 0.7. The model never delays the save: it starts after the review opens; failures and timeouts are logged privately and ignored. On the review screen a late result fills a field only if the user has not touched it since the screen loaded.
+- DEFERRED: none
+- MANUAL: on the Mac with Apple Intelligence on, run the simulator (macOS 26 shares the model with the simulator only if supported; otherwise "My Mac (Designed for iPhone)" or wait for the iPhone): import a few synthetic slips, check the sparkles and any `ai_disagrees_*` checks; turn the switch off and check nothing runs

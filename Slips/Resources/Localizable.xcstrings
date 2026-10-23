@@ -307,6 +307,159 @@
         }
       }
     },
+    "ai.onDevice.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads each slip a second time with Apple’s on-device model and flags what it reads differently. Nothing leaves this iPhone."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relit chaque reçu avec le modèle d’Apple sur l’appareil et signale ce qu’il lit autrement. Rien ne quitte cet iPhone."
+          }
+        }
+      }
+    },
+    "ai.onDevice.status.available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available on this iPhone."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offert sur cet iPhone."
+          }
+        }
+      }
+    },
+    "ai.onDevice.status.deviceNotEligible" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone does not support Apple Intelligence; slips are read without it."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet iPhone ne prend pas en charge Apple Intelligence; les reçus sont lus sans elle."
+          }
+        }
+      }
+    },
+    "ai.onDevice.status.needsNewerIOS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs iOS 26 or later; slips are read without it."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nécessite iOS 26 ou plus récent; les reçus sont lus sans elle."
+          }
+        }
+      }
+    },
+    "ai.onDevice.status.notEnabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on Apple Intelligence in iOS Settings to use it."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activez Apple Intelligence dans les Réglages d’iOS pour l’utiliser."
+          }
+        }
+      }
+    },
+    "ai.onDevice.status.notReady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The model is still downloading; it will be used once ready."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le modèle est en cours de téléchargement; il sera utilisé dès qu’il sera prêt."
+          }
+        }
+      }
+    },
+    "ai.onDevice.status.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not available right now; slips are read without it."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non offert pour le moment; les reçus sont lus sans elle."
+          }
+        }
+      }
+    },
+    "ai.onDevice.toggle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proofread with on-device AI"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire avec l’IA sur l’appareil"
+          }
+        }
+      }
+    },
+    "ai.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IA"
+          }
+        }
+      }
+    },
     "appearance.dark" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4181,6 +4334,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter une date"
+          }
+        }
+      }
+    },
+    "review.aiFilled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filled by AI"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rempli par l’IA"
           }
         }
       }

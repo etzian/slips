@@ -7,6 +7,7 @@ import SwiftUI
 struct PrivacyView: View {
     @Environment(AppModel.self) private var model
     @AppStorage(AppLock.key) private var lockOn = false
+    @AppStorage(OnDeviceAI.settingKey) private var aiOnDevice = true
     @State private var destinations: [Destination] = []
     @State private var lockError: LocalizedStringKey?
 
@@ -38,6 +39,17 @@ struct PrivacyView: View {
             }
             Section("privacy.processing") {
                 Text("privacy.processing.ocr")
+            }
+            Section {
+                Toggle("ai.onDevice.toggle", isOn: $aiOnDevice)
+                    .accessibilityIdentifier("ai.onDevice.toggle")
+            } header: {
+                Text("ai.section")
+            } footer: {
+                VStack(alignment: .leading, spacing: EZ.Space.xs2) {
+                    Text("ai.onDevice.footer")
+                    Text(verbatim: OnDeviceAI.status.message)
+                }
             }
             Section("privacy.officer") {
                 Text(verbatim: Company.privacyOfficerName)

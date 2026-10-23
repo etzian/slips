@@ -104,6 +104,7 @@ export_csv_json_zip: docs/EXPORT.md; made on the device, leaves only through the
 automated_processing:
   ocr: On-device (Vision). No image or text leaves the device for recognition.
   parsing_and_checks: On-device rules (SlipsCore). No decision with legal effect; the user confirms every field.
-  ai: none in M1 (M2 adds an optional, off-by-default endpoint; a data-map change and a legal review).
+  ai_on_device: Apple's on-device model (Foundation Models, iOS 26, Apple Intelligence) re-reads the OCR text of each slip and flags disagreements; it may fill fields the parser left empty. On by default, runs on the device only, nothing is sent. Settings › Privacy › AI turns it off. (M2)
+  ai_endpoints: none yet (M2 P4 adds optional, off-by-default endpoints — a data-map change and a legal review).
 
 erasure: Settings › Danger zone › "Erase all data on this iPhone" removes every slip file, every row, the Keychain items and preferences. Copies already delivered to destinations are not touched; the screen says so.
