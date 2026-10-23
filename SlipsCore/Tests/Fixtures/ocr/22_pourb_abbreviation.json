@@ -1,0 +1,19 @@
+{
+  "required": [
+    "subtotal",
+    "gst",
+    "qst",
+    "tip",
+    "total"
+  ],
+  "fields": {
+    "merchant": "BAR FICTIF",
+    "date": "2026-10-03",
+    "subtotal": 2000,
+    "gst": 100,
+    "qst": 200,
+    "tip": 400,
+    "total": 2700
+  },
+  "low_confidence": []
+}

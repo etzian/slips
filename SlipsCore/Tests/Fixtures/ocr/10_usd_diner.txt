@@ -1,0 +1,7 @@
+FAKE DINER NEW YORK
+10/12/26 12:40
+Pancakes | 14.00
+Coffee | 11.00
+Subtotal | 25.00
+Tax | 2.22
+Total USD | 27.22

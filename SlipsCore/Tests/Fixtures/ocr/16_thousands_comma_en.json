@@ -1,0 +1,19 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "FAKE ELECTRONICS",
+    "date": "2026-10-07",
+    "subtotal": 107400,
+    "gst": 5370,
+    "qst": 10713,
+    "total": 123483
+  },
+  "low_confidence": []
+}

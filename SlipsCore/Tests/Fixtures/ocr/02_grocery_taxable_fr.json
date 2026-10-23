@@ -1,0 +1,21 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "gst",
+    "qst",
+    "total",
+    "card_last4"
+  ],
+  "fields": {
+    "merchant": "MARCHÉ FICTIF",
+    "date": "2026-10-18",
+    "subtotal": 2000,
+    "gst": 100,
+    "qst": 200,
+    "total": 2300,
+    "card_last4": "0002"
+  },
+  "low_confidence": []
+}

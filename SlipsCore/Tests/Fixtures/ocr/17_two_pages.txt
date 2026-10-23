@@ -1,0 +1,9 @@
+FICTIVE SUPPLY CO
+Invoice date: 2026-10-06
+Paper | 30.00
+Toner | 70.00
+---page---
+Subtotal | 100.00
+GST | 5.00
+QST | 9.98
+Total | 114.98

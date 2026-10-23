@@ -375,6 +375,23 @@
         }
       }
     },
+    "capture.reading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading the slip…"
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture du reçu…"
+          }
+        }
+      }
+    },
     "capture.saved.message %lld" : {
       "extractionState" : "manual",
       "localizations" : {

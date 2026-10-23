@@ -1,0 +1,13 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "total"
+  ],
+  "fields": {
+    "merchant": "MARCHÉ AUX PUCES FICTIF",
+    "date": "2026-10-11",
+    "total": 2500
+  },
+  "low_confidence": []
+}

@@ -1,0 +1,23 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "gst",
+    "qst",
+    "tip",
+    "total",
+    "card_last4"
+  ],
+  "fields": {
+    "merchant": "FICTIONAL BISTRO",
+    "date": "2026-10-20",
+    "subtotal": 3000,
+    "gst": 150,
+    "qst": 299,
+    "tip": 500,
+    "total": 3949,
+    "card_last4": "0004"
+  },
+  "low_confidence": []
+}

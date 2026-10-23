@@ -1,0 +1,12 @@
+FICTIONAL BISTRO
+Server: Test
+Oct 20, 2026 8:15 PM
+Burger | 18.00
+Salad | 12.00
+Subtotal | 30.00
+GST | 1.50
+QST | 2.99
+Total | 34.49
+Tip | 5.00
+Total | 39.49
+Visa ****0004

@@ -1,0 +1,14 @@
+{
+  "required": [
+    "merchant",
+    "total"
+  ],
+  "fields": {
+    "merchant": "BOULANGERIE FICTIVE",
+    "date": "2026-06-05",
+    "total": 600
+  },
+  "low_confidence": [
+    "date"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "total",
+    "card_last4"
+  ],
+  "fields": {
+    "merchant": "STATIONNEMENT FICTIF",
+    "date": "2026-10-09",
+    "total": 2345,
+    "card_last4": "0014"
+  },
+  "low_confidence": []
+}

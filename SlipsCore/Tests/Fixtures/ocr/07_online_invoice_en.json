@@ -1,0 +1,25 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "gst",
+    "qst",
+    "total",
+    "card_last4",
+    "supplier_gst_no",
+    "supplier_qst_no"
+  ],
+  "fields": {
+    "merchant": "Fake Software Inc",
+    "date": "2026-10-20",
+    "subtotal": 10000,
+    "gst": 500,
+    "qst": 998,
+    "total": 11498,
+    "card_last4": "0007",
+    "supplier_gst_no": "100000000 RT0007",
+    "supplier_qst_no": "1000000000 TQ0007"
+  },
+  "low_confidence": []
+}

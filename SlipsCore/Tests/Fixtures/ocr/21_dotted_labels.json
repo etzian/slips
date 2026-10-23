@@ -1,0 +1,18 @@
+{
+  "required": [
+    "merchant",
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "CAFÉ FICTIF",
+    "date": "2026-10-04",
+    "subtotal": 500,
+    "gst": 25,
+    "qst": 50,
+    "total": 575
+  },
+  "low_confidence": []
+}

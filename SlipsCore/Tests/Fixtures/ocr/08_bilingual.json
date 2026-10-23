@@ -1,0 +1,19 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "DÉPANNEUR FICTIF / FICTIONAL CONVENIENCE",
+    "date": "2026-10-17",
+    "subtotal": 1000,
+    "gst": 50,
+    "qst": 100,
+    "total": 1150
+  },
+  "low_confidence": []
+}

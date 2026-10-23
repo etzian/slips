@@ -1,0 +1,19 @@
+{
+  "required": [
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "ÉPICERIE PÂLE FICTIVE",
+    "date": "2026-10-10",
+    "subtotal": 900,
+    "gst": 45,
+    "qst": 90,
+    "total": 1035
+  },
+  "low_confidence": [
+    "total"
+  ]
+}

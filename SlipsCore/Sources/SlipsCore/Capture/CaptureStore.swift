@@ -43,6 +43,23 @@ public struct CaptureStore: Sendable {
         }
     }
 
+    /// Stores the parser's output on a slip: the raw extraction, the OCR text and the fields it filled.
+    /// Values the user already typed are kept.
+    public func recordExtraction(_ extraction: Extraction, ocrText: String, for slipId: UUID) throws {
+        try database.writer.write { db in
+            guard var slip = try Slip.fetchOne(db, id: slipId) else { throw ValidationError.notFound }
+            let edited = slip.extracted != nil
+            if edited {
+                slip.ocrText = ocrText
+                slip.extracted = extraction.json
+            } else {
+                slip.apply(extraction, ocrText: ocrText)
+            }
+            slip.updatedAt = Date()
+            try slip.update(db)
+        }
+    }
+
     public struct SweepReport: Equatable, Sendable {
         public var orphanFoldersRemoved: Int
         public var rowsMissingFile: Int

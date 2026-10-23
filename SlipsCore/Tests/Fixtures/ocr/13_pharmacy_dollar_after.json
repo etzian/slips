@@ -1,0 +1,19 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "PHARMACIE FICTIVE",
+    "date": "2026-10-20",
+    "subtotal": 1500,
+    "gst": 75,
+    "qst": 150,
+    "total": 1725
+  },
+  "low_confidence": []
+}

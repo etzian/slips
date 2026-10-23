@@ -1,0 +1,8 @@
+CAFÉ FICTIF
+2026-10-04
+Muffin | 3,00
+Café | 2,00
+SOUS-TOTAL | 5,00
+T.P.S. | 0,25
+T.V.Q. | 0,50
+TOTAL | 5,75

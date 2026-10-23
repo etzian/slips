@@ -1,0 +1,13 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "total"
+  ],
+  "fields": {
+    "merchant": "FAKE CAFE",
+    "date": "2026-10-20",
+    "total": 525
+  },
+  "low_confidence": []
+}

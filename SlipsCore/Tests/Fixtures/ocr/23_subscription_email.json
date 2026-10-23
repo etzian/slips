@@ -1,0 +1,19 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "gst",
+    "qst",
+    "total",
+    "card_last4"
+  ],
+  "fields": {
+    "merchant": "Fictional Streaming Ltd",
+    "date": "2026-10-02",
+    "gst": 70,
+    "qst": 140,
+    "total": 1609,
+    "card_last4": "0023"
+  },
+  "low_confidence": []
+}

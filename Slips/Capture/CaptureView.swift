@@ -13,6 +13,7 @@ struct CaptureView: View {
     enum Phase {
         case idle
         case saving
+        case reading
         case saved(Slip)
         case failed(String)
     }
@@ -48,6 +49,10 @@ struct CaptureView: View {
                 Text("capture.saving")
             }
             .accessibilityIdentifier("capture.saving")
+        case .reading:
+            ProgressView {
+                Text("capture.reading")
+            }
         case .saved(let slip):
             CaptureResultView(slip: slip) { phase = .idle }
         case .failed(let detail):
@@ -101,23 +106,39 @@ struct CaptureView: View {
         }
     }
 
-    /// JPEG + PDF off the main thread, then the file and the row, then the next screen.
+    /// JPEG + PDF off the main thread, then the file and the row; only then OCR, the text layer and
+    /// the parser. A failure after the save never loses the slip: it stays a draft without fields.
     private func process(images: [UIImage]) {
         guard let profile = model.activeProfileId else { return }
         phase = .saving
         let store = model.capture
         Task {
+            let saved: (Slip, [Data])
             do {
-                let slip = try await Task.detached(priority: .userInitiated) {
+                saved = try await Task.detached(priority: .userInitiated) {
                     let pages = images.compactMap(PDFBuilder.jpeg(from:))
                     let pdf = try PDFBuilder.pdf(pages: pages)
-                    return try store.save(pdf: pdf, pageCount: pages.count, profile: profile)
+                    return (try store.save(pdf: pdf, pageCount: pages.count, profile: profile), pages)
                 }.value
-                phase = .saved(slip)
             } catch {
                 AppModel.log.error("capture failed: \(String(describing: error), privacy: .private)")
                 phase = .failed(String(describing: error))
+                return
             }
+            phase = .reading
+            let (slip, pages) = saved
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    let lines = try OCRService.recognize(pages: pages)
+                    let searchable = try PDFBuilder.pdf(pages: pages, text: OCRService.pageText(lines, pageCount: pages.count))
+                    try store.replacePDF(of: slip.id, with: searchable)
+                    let extraction = SlipParser.parse(lines, today: CalendarDay(Date()))
+                    try store.recordExtraction(extraction, ocrText: SlipParser.text(of: lines), for: slip.id)
+                }.value
+            } catch {
+                AppModel.log.error("reading failed: \(String(describing: error), privacy: .private)")
+            }
+            phase = .saved(slip)
         }
     }
 }

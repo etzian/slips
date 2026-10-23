@@ -1,0 +1,7 @@
+TAXI FICTIF
+30-SEP-26 23:10
+Fare | 22.00
+GST | 1.10
+QST | 2.19
+Gratuity | 4.00
+Total | 29.29

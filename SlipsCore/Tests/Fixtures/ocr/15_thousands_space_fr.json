@@ -1,0 +1,17 @@
+{
+  "required": [
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "MEUBLES FICTIFS",
+    "date": "2026-10-08",
+    "subtotal": 107400,
+    "gst": 5370,
+    "qst": 10713,
+    "total": 123483
+  },
+  "low_confidence": []
+}

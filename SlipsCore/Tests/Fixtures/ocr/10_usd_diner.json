@@ -1,0 +1,16 @@
+{
+  "required": [
+    "merchant",
+    "subtotal",
+    "total",
+    "currency"
+  ],
+  "fields": {
+    "merchant": "FAKE DINER NEW YORK",
+    "date": "2026-10-12",
+    "subtotal": 2500,
+    "total": 2722,
+    "currency": "USD"
+  },
+  "low_confidence": []
+}

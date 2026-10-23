@@ -1,0 +1,21 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "subtotal",
+    "hst",
+    "total",
+    "card_last4",
+    "supplier_gst_no"
+  ],
+  "fields": {
+    "merchant": "FAKE BOOKSTORE TORONTO",
+    "date": "2026-10-15",
+    "subtotal": 4000,
+    "hst": 520,
+    "total": 4520,
+    "card_last4": "0009",
+    "supplier_gst_no": "100000000 RT0009"
+  },
+  "low_confidence": []
+}

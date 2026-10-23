@@ -1,0 +1,19 @@
+{
+  "required": [
+    "merchant",
+    "date",
+    "gst",
+    "qst",
+    "tip",
+    "total"
+  ],
+  "fields": {
+    "merchant": "TAXI FICTIF",
+    "date": "2026-09-30",
+    "gst": 110,
+    "qst": 219,
+    "tip": 400,
+    "total": 2929
+  },
+  "low_confidence": []
+}

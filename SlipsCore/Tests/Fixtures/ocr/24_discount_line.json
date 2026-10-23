@@ -1,0 +1,18 @@
+{
+  "required": [
+    "merchant",
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "VÊTEMENTS FICTIFS",
+    "date": "2026-10-01",
+    "subtotal": 2000,
+    "gst": 100,
+    "qst": 200,
+    "total": 2300
+  },
+  "low_confidence": []
+}

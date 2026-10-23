@@ -1,0 +1,11 @@
+Fake Software Inc.
+INVOICE
+Invoice date: October 20, 2026
+Team plan, 1 month | $100.00
+Subtotal | $100.00
+GST (5%) | $5.00
+QST (9.975%) | $9.98
+Total | $114.98
+Paid with Visa ending ****0007
+GST/HST No. 100000000 RT0007
+QST No. 1000000000 TQ0007

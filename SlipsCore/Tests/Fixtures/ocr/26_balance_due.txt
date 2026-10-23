@@ -1,0 +1,8 @@
+ATELIER FICTIF
+Facture
+2026-09-29
+Réparation | 80,00
+SOUS-TOTAL | 80,00
+TPS | 4,00
+TVQ | 7,98
+SOLDE | 91,98

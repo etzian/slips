@@ -1,0 +1,17 @@
+{
+  "required": [
+    "subtotal",
+    "gst",
+    "qst",
+    "total"
+  ],
+  "fields": {
+    "merchant": "GRANDE SURFACE FICTIVE",
+    "date": "2026-10-05",
+    "subtotal": 1500,
+    "gst": 75,
+    "qst": 150,
+    "total": 1725
+  },
+  "low_confidence": []
+}

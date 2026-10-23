@@ -59,7 +59,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P2 | Storage and migrations | done |
 | P3 | Reference data | done |
 | P4 | Capture: scanner → PDF on disk | done |
-| P5 | OCR and parser | pending |
+| P5 | OCR and parser | done |
 | P6 | Classification screen, suggestions | pending |
 | P7 | Checks | pending |
 | P8 | Outbox scheduler | pending |
@@ -118,7 +118,7 @@ Same Linux session. Gate steps 1, 3, 4, 5 exit 0 (31 tests). App sources pass `s
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac (first compile of the app target)
 
-### P4 — capture · pass (Linux, xcodebuild not run) · 2026-10-23
+### P4 — capture · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 5ab69f2
 
 Gate steps 1, 3, 4, 5 exit 0 (36 core tests). App sources parse-checked only.
 
@@ -131,3 +131,17 @@ Gate steps 1, 3, 4, 5 exit 0 (36 core tests). App sources parse-checked only.
 - DECISIONS: Write order is file → row; a failed insert deletes the file. The sweep deletes slip folders with no row and adds the blocking check `file_missing` to rows whose PDF is gone (P7 must keep it). `replacePDF` (for P5's text layer) is refused once a delivery row exists. PDF pages are 842 pt on the long edge. fr-CA uses U+00A0 before `:`. Plurals use catalog plural variations.
 - DEFERRED: none
 - MANUAL: on a device, scan a two-page slip and check the PDF opens and is a few hundred kB; run `./scripts/gate.sh` on the Mac
+
+### P5 — OCR and parser · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (45 core tests; all 27 fixtures 100 % on required fields; optional fields
+≥ 95 %). App sources parse-checked only.
+
+- CHANGED: core `Extraction/` (`OCRLine`, `NormalizedRect`, `OCRRow` row merging, `Extraction` +
+  `ExtractedField`, `SlipParser` with one function per field, `Slip.apply`), `CaptureStore.recordExtraction`;
+  `Tests/Fixtures/ocr/` 27 synthetic transcripts + expected JSON; `ParserTests.swift`; app
+  `Capture/OCRService.swift` (`VNRecognizeTextRequest`, fr-FR + en-US, no language correction), capture
+  flow saves → OCR → text-layer PDF (`replacePDF`) → parse; `SlipsTests/OCRServiceTests.swift`
+- DECISIONS: Fixture format: one row per line, ` | ` splits observations on a row, ` @0.3` = recogniser confidence, `---page---`. Field confidence = rule confidence × row confidence; < 0.6 is "low" (`ExtractedField.lowConfidence`). Total = largest amount on a TOTAL-like row (tip included), fallback MONTANT/AMOUNT at 0.6. HST present → GST/QST not read. Ambiguous numeric dates: the future reading loses, else 2-digit year → MM/DD/YY, 4-digit → DD/MM/YYYY at 0.5. Currency CAD at 0.7 when none printed. Registration numbers normalised `123456789 RT0001` / `1234567890 TQ0001`. `slips.extracted` = `Extraction` JSON; re-OCR of an edited slip keeps the user's values. Regex helpers are `regexMatches`/`regexFirstMatch` (NSRegularExpression; ICU needs `\x{…}` escapes).
+- DEFERRED: none
+- MANUAL: OCR quality on a real device with a few real slips (never committed); run `./scripts/gate.sh` on the Mac

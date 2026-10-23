@@ -1,0 +1,11 @@
+{
+  "required": [
+    "total"
+  ],
+  "fields": {
+    "merchant": "COMMERCE ILLISIBLE FICTIF",
+    "date": "2026-09-28",
+    "total": null
+  },
+  "low_confidence": []
+}

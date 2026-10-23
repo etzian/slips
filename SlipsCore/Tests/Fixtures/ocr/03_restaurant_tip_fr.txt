@@ -1,0 +1,13 @@
+RESTO FICTIF
+456 boul. Imaginaire
+Facture # 1042
+Date: 20/10/2026 19:45
+2 x Plat du jour | 36,00
+1 x Dessert | 8,00
+SOUS-TOTAL | 44,00
+TPS 5% | 2,20
+TVQ 9,975% | 4,39
+TOTAL | 50,59
+POURBOIRE | 7,59
+TOTAL | 58,18
+MASTERCARD XXXXXXXXXXXX0003
