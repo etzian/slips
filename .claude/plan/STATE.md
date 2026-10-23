@@ -57,7 +57,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 |---|---|---|
 | P1 | Skeleton: package, app, gate, catalogs | done |
 | P2 | Storage and migrations | done |
-| P3 | Reference data | pending |
+| P3 | Reference data | done |
 | P4 | Capture: scanner → PDF on disk | pending |
 | P5 | OCR and parser | pending |
 | P6 | Classification screen, suggestions | pending |
@@ -88,7 +88,7 @@ Tuist"); attempt 2 (opus) removed it. Orchestrator re-ran `./scripts/gate.sh` (e
 - DEFERRED: none (attempt 1 noted: no app icon image, empty AppIcon set; Company.swift / gen-company.sh belong to P12)
 - MANUAL: none
 
-### P2 — storage and migrations · pass (Linux, xcodebuild not run) · 2026-10-23
+### P2 — storage and migrations · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 1e574f0
 
 Run in a Claude Code cloud session (Linux, Swift 6.2.1 from the official `swift:6.2.1-noble` image, no
 Xcode). Gate steps 1, 3, 4, 5 exit 0 (`swift test` 18 tests; licences with
@@ -102,3 +102,18 @@ Xcode). Gate steps 1, 3, 4, 5 exit 0 (`swift test` 18 tests; licences with
 - DECISIONS: UUIDs are GRDB's default 16-byte blobs (never compare with a uuid string); dates are GRDB date strings (UTC); `txn_date` is `CalendarDay` stored `YYYY-MM-DD`; amounts are `Int` minor units with the slip's `currency`, `Money` for display. Records conform to `SlipsRecord` (snake_case columns). JSON columns: `destinations.config` is `[String: String]`; `slips.extracted` and `slips.checks` are JSON `String?` until P5/P7 give them types. `merchant_memory` primary key (profile_id, merchant_norm). FKs: profile deletion cascades to everything; enterprises, sub-categories and payment methods used by a slip cannot be deleted (archive). `AppDatabase.createProfile(name:seedNames:)` takes the seeded destination names from the app (translated). `FileStore` paths are relative (`Slips/<profile>/<slip>/slip.pdf`, lowercase uuids); `.complete` for slip PDFs, `.untilFirstUnlock` for outbox staging files; protection only applied `#if os(iOS)`.
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac (xcodebuild step)
+
+### P3 — reference data · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Same Linux session. Gate steps 1, 3, 4, 5 exit 0 (31 tests). App sources pass `swiftc -parse` only:
+**not type-checked**; the first Mac `./scripts/gate.sh` is their first compile.
+
+- CHANGED: `SlipsCore/Services/ReferenceData.swift` (validation, remove = delete-or-archive, observers,
+  `ReferenceSnapshot`), `Storage/Observation.swift` (`ValueObservation` → `AsyncThrowingStream`);
+  `Slips/App/` (`AppModel` @Observable, `RootView` tab shell), `Slips/Settings/` (Settings root, Profiles,
+  Businesses, Sub-categories, Payment methods + editor), `Slips/Support/` (Appearance, Labels, state
+  views, `Metrics`), Library and Capture placeholders; `PlaceholderView` removed; 118 catalog keys (en,
+  fr-CA) incl. `subcategory.<fin key>` for all 27 seed keys; launch UI test checks the 3 tabs
+- DECISIONS: Catalog keys are dotted identifiers (`area.thing`), every key is `extractionState: manual`; dynamic keys (`subcategory.<key>`) are read with `Bundle.main.localizedString`. Active profile id in `UserDefaults` (`activeProfileId`); the app creates a "Personal" profile on first launch. `-uiTesting` launch argument = in-memory database + temp folder. Remove = delete when unused, archive when used; seeded sub-categories always archive; transfer keys refuse. Screens observe through `ReferenceData.observe*` streams (`.task { for try await … }`), never GRDB. Errors logged `privacy: .private`.
+- DEFERRED: none
+- MANUAL: run `./scripts/gate.sh` on the Mac (first compile of the app target)

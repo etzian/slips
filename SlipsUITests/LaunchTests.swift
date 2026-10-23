@@ -2,10 +2,11 @@ import XCTest
 
 final class LaunchTests: XCTestCase {
     @MainActor
-    func testLaunchShowsPlaceholder() {
+    func testLaunchShowsTabs() {
         let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting"]
         app.launch()
-        XCTAssertTrue(app.otherElements["placeholder"].waitForExistence(timeout: 10)
-            || app.staticTexts.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
+        XCTAssertEqual(app.tabBars.firstMatch.buttons.count, 3)
     }
 }
