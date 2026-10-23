@@ -88,6 +88,9 @@ public struct SlipStore: Sendable {
         s.updatedAt = now
         let saved = s
         try database.writer.write { db in
+            if let old = try Slip.fetchOne(db, id: saved.id) {
+                try DeliveryQueue.requeueAfterEdit(old: old, new: saved, now: now, in: db)
+            }
             try saved.update(db)
             try Self.remember(saved, now: now, in: db)
             let destinations = try Destination

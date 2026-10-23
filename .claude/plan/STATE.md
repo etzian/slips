@@ -62,7 +62,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P5 | OCR and parser | done |
 | P6 | Classification screen, suggestions | done |
 | P7 | Checks | done |
-| P8 | Outbox scheduler | pending |
+| P8 | Outbox scheduler | done |
 | P9 | Destinations: iCloud, Files folder, share sheet, naming rule | pending |
 | P10 | WebDAV destination, probe, App Intent | pending |
 | P11 | Library, search, export | pending |
@@ -159,7 +159,7 @@ Gate steps 1, 3, 4, 5 exit 0 (57 core tests). App sources parse-checked only.
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac
 
-### P7 — checks · pass (Linux, xcodebuild not run) · 2026-10-23
+### P7 — checks · pass (Linux, xcodebuild not run) · 2026-10-23 · commit 150573d
 
 Gate steps 1, 3, 4, 5 exit 0 (67 core tests; one test per check, firing and not firing). App sources
 parse-checked only.
@@ -172,3 +172,21 @@ parse-checked only.
 - DECISIONS: `slips.checks` is recomputed on every save (draft or ready), never trusted from the caller; `markReady` refuses on any blocking check (`total_missing`, `file_missing`). Tax rate: |GST − round(5 % × taxable)| > 1 ¢ or |QST − round(9.975 %)| > 1 ¢ → info; taxable = subtotal, else total − taxes − tip. Duplicate = same profile, day, total and normalised merchant, other id, not archived. Date limit 2 years by default (`Context.maxAgeYears`). Check messages with values use `String(format:)` with `%@`; a message without values is shown raw (so a literal `%` is safe only there).
 - DEFERRED: none
 - MANUAL: run `./scripts/gate.sh` on the Mac
+
+### P8 — outbox scheduler · pass (Linux, xcodebuild not run) · 2026-10-23
+
+Gate steps 1, 3, 4, 5 exit 0 (86 core tests; outbox suites run 5× without a flake). App sources
+parse-checked only.
+
+- CHANGED: core `Outbox/` (`DestinationAdapter` protocol + `Reachability`, `RemoteRef`, `DeliveryItem`,
+  `DeliveryError`, `NetworkConditions`; `Outbox` actor; `DeliveryQueue`: summaries, manual retry,
+  backlog on enable, re-queue after edit), `SlipStore.markReady` re-queues; `OutboxTests.swift` with
+  `FakeDestination` + `TestClock` (offline→online, 500→201, write-then-timeout, 401, bad vs good
+  destination, restart mid-flight, tampered file, Wi-Fi only, concurrency 1/3, concurrent drains);
+  app `Outbox/DeliveryScheduler.swift` (foreground, `NWPathMonitor`, `BGAppRefreshTask`
+  `com.etzian.slips.outbox`, save, next-due timer), `Outbox/DestinationAdapters.swift` (none yet),
+  `Slips/Info.plist` (BGTaskSchedulerPermittedIdentifiers, UIBackgroundModes fetch; excluded from the
+  synced group, `INFOPLIST_FILE` set, merged with the generated keys)
+- DECISIONS: The protocol is `DestinationAdapter` (the `Destination` name is the record); `exists` returns `RemoteRef?` rather than Bool. Every step is a DB write first: claim (`pending`→`in_flight`, conditional UPDATE so two drains never take the same row) → `exists` → `deliver` → `done` with `remote_ref` + `delivered_sha256`. Errors: `.unauthorized` → `needs_auth` and all pending rows of that destination too; `.permanent` → `failed`; `.transient` → backoff 30 s, 2 min, 10 min, 1 h, 6 h…, `failed` at attempt 20. Probe `.unreachable` costs no attempt. The file is re-hashed before each attempt (`hash_mismatch` → failed). `in_flight` older than 15 min → `pending`. A drain called during a drain loops once more. Wi-Fi-only destinations need Wi-Fi and no Low Data Mode. Destination config `sidecar = "1"` = keeps a JSON sidecar; edits re-queue `done` rows of sidecar destinations or of naming rules with field tokens, keeping `remote_ref` so the adapter gets `previousRef` (the adapter must replace/move the old copy). Enabling a destination should call `enqueueBacklog`.
+- DEFERRED: none
+- MANUAL: on a device, background refresh only fires after real use; run `./scripts/gate.sh` on the Mac

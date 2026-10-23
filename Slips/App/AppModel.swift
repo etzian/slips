@@ -12,6 +12,8 @@ final class AppModel {
     let reference: ReferenceData
     let capture: CaptureStore
     let slips: SlipStore
+    let deliveries: DeliveryQueue
+    let scheduler: DeliveryScheduler
     private(set) var activeProfileId: UUID?
     /// Set when the database could not be opened; the shell shows it instead of the tabs.
     private(set) var startupError: String?
@@ -26,6 +28,8 @@ final class AppModel {
         self.reference = ReferenceData(database: database)
         self.capture = CaptureStore(database: database, files: files)
         self.slips = SlipStore(database: database, files: files)
+        self.deliveries = DeliveryQueue(database: database)
+        self.scheduler = DeliveryScheduler(database: database, files: files, adapters: DestinationAdapters.make)
         self.defaults = defaults
         bootstrap()
     }
@@ -52,6 +56,9 @@ final class AppModel {
             return model
         }
     }
+
+    /// The running app's model, for the background task handler (registered before any view exists).
+    static var current: AppModel?
 
     static func preview() -> AppModel {
         AppModel(database: try! AppDatabase.inMemory(),

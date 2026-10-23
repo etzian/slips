@@ -232,7 +232,12 @@ struct ReviewView: View {
         do {
             var s = slip
             s.currency = s.currency.trimmingCharacters(in: .whitespaces).uppercased()
-            if ready { try model.slips.markReady(s) } else { try model.slips.saveDraft(s) }
+            if ready {
+                try model.slips.markReady(s)
+                model.scheduler.trigger("save")
+            } else {
+                try model.slips.saveDraft(s)
+            }
             onDone()
         } catch SaveError.classificationIncomplete {
             error = "error.save.incomplete"
