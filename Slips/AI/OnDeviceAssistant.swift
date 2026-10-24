@@ -31,9 +31,11 @@ enum OnDeviceAI {
     static let settingKey = "aiOnDevice"
     static let timeout: Duration = .seconds(30)
 
-    /// The user's switch; on unless turned off.
+    /// The user's switch; on unless turned off. Off under UI tests: a model answer arriving mid-test
+    /// changes the review screen while the test taps it, and the host Mac's model may or may not be ready.
     static var isOn: Bool {
-        UserDefaults.standard.object(forKey: settingKey) as? Bool ?? true
+        if ProcessInfo.processInfo.arguments.contains("-uiTesting") { return false }
+        return UserDefaults.standard.object(forKey: settingKey) as? Bool ?? true
     }
 
     static var status: OnDeviceStatus {
