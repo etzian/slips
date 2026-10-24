@@ -125,7 +125,10 @@ Gate steps 1, 3, 4, 5 exit 0 (145 core tests). App sources parse-checked only.
   total check; a different total is `info` when the slip adds up, `warning` only when it does not. The
   prompt says untaxed is null and gives the reference day.
 - Numeric dates: every valid reading (DD/MM/YY, MM/DD/YY, YY/MM/DD; DD/MM/YYYY, MM/DD/YYYY) is kept;
-  readings after the reference day are dropped; the closest wins (0.8 when > 60 days clearer, else the
-  usual style at 0.5, highlighted). Reference day: an imported file's name date ("Adobe Scan 20 oct.
+  readings after **today** are dropped; the one closest to the reference day wins, before or after it
+  (user, 2026-10-24: the printed date counts, the file date only checks it; 11/05/2026 scanned 8 May →
+  11 May), 0.8 when > 60 days clearer than the next, else 0.5 (highlighted). A date more than a year from
+  the reference whose day/month falls within 60 days of it in the reference's year (±1) gets that year,
+  highlighted (OCR slip on the year). Reference day: an imported file's name date ("Adobe Scan 20 oct.
   2026"), else its modification day; a scan uses today.
 - GST numbers printed in groups (`12345-6789 RT0001`). Synthetic fixture 29.

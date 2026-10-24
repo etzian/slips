@@ -23,7 +23,7 @@ public enum AssistantPrompt {
         var text = "Locale: \(input.localeIdentifier)\n"
         if let c = input.currencyHint { text += "Currency printed or assumed: \(c)\n" }
         if let d = input.referenceDay {
-            text += "Scanned on or around \(d.iso); the transaction date is that day or earlier. "
+            text += "Scanned or saved around \(d.iso); the date printed on the slip is what counts, usually close to that day. "
             text += "Numeric dates may be DD/MM/YY, MM/DD/YY or YY/MM/DD: choose the reading closest to that day.\n"
         }
         return text + "Slip text:\n" + input.ocrText

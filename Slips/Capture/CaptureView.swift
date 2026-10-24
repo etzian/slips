@@ -209,8 +209,9 @@ struct CaptureView: View {
                     let lines = try OCRService.recognize(pages: pages)
                     let searchable = try PDFBuilder.pdf(pages: pages, text: OCRService.pageText(lines, pageCount: pages.count))
                     try store.replacePDF(of: slip.id, with: searchable)
-                    let referenceDay = reference ?? CalendarDay(Date())
-                    let extraction = SlipParser.parse(lines, today: referenceDay)
+                    let today = CalendarDay(Date())
+                    let referenceDay = reference ?? today
+                    let extraction = SlipParser.parse(lines, today: today, reference: referenceDay)
                     let text = SlipParser.text(of: lines)
                     try store.recordExtraction(extraction, ocrText: text, for: slip.id)
                     return AssistantInput(ocrText: text, localeIdentifier: Locale.current.identifier,

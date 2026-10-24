@@ -164,6 +164,31 @@ extension Extraction {
         #expect((SlipParser.date(in: "05/06/2026", today: ref)?.1 ?? 1) < 0.6)
     }
 
+    @Test func closestToTheFileDateEvenIfAfterIt() {
+        let today = CalendarDay(year: 2026, month: 10, day: 24)
+        let scan = CalendarDay(year: 2026, month: 5, day: 8)
+        // Bill 11/05/2026, file dated 8 May 2026: 11 May (3 days after), not 5 November.
+        #expect(SlipParser.date(in: "11/05/2026", today: today, reference: scan)?.0.iso == "2026-05-11")
+        #expect(SlipParser.date(in: "11/05/26", today: today, reference: scan)?.0.iso == "2026-05-11")
+        // A reading after today stays impossible however close it is.
+        #expect(SlipParser.date(in: "03/11/2026", today: CalendarDay(year: 2026, month: 10, day: 23),
+                                reference: CalendarDay(year: 2026, month: 10, day: 30))?.0.iso == "2026-03-11")
+    }
+
+    @Test func yearCorrectedAgainstTheFileDate() {
+        let today = CalendarDay(year: 2026, month: 10, day: 24)
+        let file = CalendarDay(year: 2026, month: 10, day: 22)
+        // OCR read the year as 2016; the file is from October 2026.
+        let r = SlipParser.date(in: "2016-10-20", today: today, reference: file)
+        #expect(r?.0.iso == "2026-10-20")
+        #expect((r?.1 ?? 1) < 0.6)
+        // Day and month far from the file date: the printed year stands.
+        #expect(SlipParser.date(in: "2016-03-02", today: today, reference: file)?.0.iso == "2016-03-02")
+        // No file date: today is the reference. Nothing at all: the printed year stands.
+        #expect(SlipParser.date(in: "2016-10-20", today: today, reference: nil)?.0.iso == "2026-10-20")
+        #expect(SlipParser.date(in: "2016-10-20", today: nil, reference: nil)?.0.iso == "2016-10-20")
+    }
+
     @Test func referenceDayFromFileNames() {
         #expect(SlipParser.referenceDay(fromFileName: "Adobe Scan 20 oct. 2026 (2).pdf")?.iso == "2026-10-20")
         #expect(SlipParser.referenceDay(fromFileName: "IMG_20261020_174812.jpg")?.iso == "2026-10-20")

@@ -4,7 +4,9 @@ import Foundation
 /// Each field has its own function over the reading rows; `parse` composes them.
 public enum SlipParser {
     /// `today` decides between two readings of an ambiguous date (the one in the future loses).
-    public static func parse(_ lines: [OCRLine], today: CalendarDay? = nil) -> Extraction {
+    /// `today` makes later dates impossible; `reference` (the scan day, or the date in an imported
+    /// file's name; defaults to `today`) decides between readings of an ambiguous date.
+    public static func parse(_ lines: [OCRLine], today: CalendarDay? = nil, reference: CalendarDay? = nil) -> Extraction {
         let rows = OCRRow.rows(from: lines).map(Row.init)
         var e = Extraction()
         e.currency = currency(rows)
@@ -16,7 +18,7 @@ public enum SlipParser {
         e.subtotal = labelledAmount(rows, labels: Labels.subtotal, excluding: [])
         e.tip = labelledAmount(rows, labels: Labels.tip, excluding: [])
         e.total = total(rows)
-        e.date = date(rows, today: today)
+        e.date = date(rows, today: today, reference: reference ?? today)
         e.cardLast4 = cardLast4(rows)
         e.supplierGstNo = gstNumber(rows)
         e.supplierQstNo = qstNumber(rows)
@@ -223,17 +225,38 @@ public enum SlipParser {
 
     /// The first date in reading order, rows labelled DATE first. Formats: `2026-10-20`, `2026/10/20`,
     /// `20/10/2026`, `10/20/26`, `20 oct. 2026`, `Oct 20, 2026`, `20-OCT-26`.
-    static func date(_ rows: [Row], today: CalendarDay?) -> ExtractedField<CalendarDay>? {
+    static func date(_ rows: [Row], today: CalendarDay?, reference: CalendarDay? = nil) -> ExtractedField<CalendarDay>? {
         let labelled = rows.filter { $0.norm.contains(regex: #"\bDATE\b"#) }
         for r in labelled + rows {
-            if let (day, confidence) = date(in: r.norm, today: today) {
+            if let (day, confidence) = date(in: r.norm, today: today, reference: reference) {
                 return r.field(day, confidence)
             }
         }
         return nil
     }
 
-    static func date(in text: String, today: CalendarDay?) -> (CalendarDay, Double)? {
+    static func date(in text: String, today: CalendarDay?, reference: CalendarDay? = nil) -> (CalendarDay, Double)? {
+        let reference = reference ?? today
+        guard let (day, confidence) = printedDate(in: text, today: today, reference: reference) else { return nil }
+        return correctedYear(day, confidence, today: today, reference: reference)
+    }
+
+    /// The printed date is what counts; the reference only checks it. A date more than a year from the
+    /// reference whose day and month fall within two months of it in the reference's year (or the year
+    /// either side) is taken in that year, highlighted for the user (an OCR slip on the year digits).
+    static func correctedYear(_ day: CalendarDay, _ confidence: Double, today: CalendarDay?,
+                              reference: CalendarDay?) -> (CalendarDay, Double) {
+        guard let reference, abs(daysBetween(day, reference)) > 365 else { return (day, confidence) }
+        let candidates = [reference.year - 1, reference.year, reference.year + 1].compactMap {
+            CalendarDay(year: $0, month: day.month, day: day.day)
+        }.filter { c in abs(daysBetween(c, reference)) <= 60 && (today.map { daysBetween(c, $0) >= -1 } ?? true) }
+        guard let best = candidates.min(by: { abs(daysBetween($0, reference)) < abs(daysBetween($1, reference)) }) else {
+            return (day, confidence)
+        }
+        return (best, min(confidence, 0.5))
+    }
+
+    static func printedDate(in text: String, today: CalendarDay?, reference: CalendarDay?) -> (CalendarDay, Double)? {
         // ISO-like, year first.
         if let g = text.regexFirstMatch(#"(?<!\d)(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)"#),
            let d = CalendarDay(year: Int(g[1])!, month: Int(g[2])!, day: Int(g[3])!) {
@@ -264,26 +287,25 @@ public enum SlipParser {
             add(CalendarDay(year: year, month: b, day: a), last.count == 4 ? 0 : 1)
             add(CalendarDay(year: year, month: a, day: b), last.count == 4 ? 1 : 0)
             if last.count == 2 { add(CalendarDay(year: 2000 + a, month: b, day: Int(last)!), 2) }
-            return choose(readings, reference: today)
+            return choose(readings, today: today, reference: reference)
         }
         return nil
     }
 
-    /// One reading → sure. Several → drop those after the reference day (a slip is never from the
-    /// future), take the closest; sure-ish (0.8) when it is clearly closer than the next, otherwise
-    /// the usual style at 0.5 so the review screen highlights it.
-    static func choose(_ readings: [(day: CalendarDay, rank: Int)], reference: CalendarDay?) -> (CalendarDay, Double)? {
+    /// One reading → sure. Several → drop those after today (a slip is never from the future), then
+    /// the one closest to the reference day wins, before or after it (a bill dated 11/05/2026 scanned
+    /// on 8 May 2026 is 11 May, not 5 November); sure-ish (0.8) when clearly closer than the next
+    /// (> 60 days), otherwise 0.5 so the review screen highlights it.
+    static func choose(_ readings: [(day: CalendarDay, rank: Int)], today: CalendarDay?, reference: CalendarDay?) -> (CalendarDay, Double)? {
         guard !readings.isEmpty else { return nil }
         if readings.count == 1 { return (readings[0].day, 0.9) }
-        let byRank = readings.sorted { $0.rank < $1.rank }
-        guard let reference else { return (byRank[0].day, 0.5) }
-        let past = readings.filter { daysBetween($0.day, reference) >= -1 }
-        guard !past.isEmpty else { return (byRank[0].day, 0.5) }
-        if past.count == 1 { return (past[0].day, 0.8) }
-        let near = past.sorted { (abs(daysBetween($0.day, reference)), $0.rank) < (abs(daysBetween($1.day, reference)), $1.rank) }
+        let possible = today.map { t in readings.filter { daysBetween($0.day, t) >= -1 } } ?? readings
+        let pool = possible.isEmpty ? readings : possible
+        if pool.count == 1 { return (pool[0].day, 0.8) }
+        guard let reference else { return (pool.sorted { $0.rank < $1.rank }[0].day, 0.5) }
+        let near = pool.sorted { (abs(daysBetween($0.day, reference)), $0.rank) < (abs(daysBetween($1.day, reference)), $1.rank) }
         let gap = abs(daysBetween(near[1].day, reference)) - abs(daysBetween(near[0].day, reference))
-        if gap > 60 { return (near[0].day, 0.8) }
-        return (past.sorted { $0.rank < $1.rank }[0].day, 0.5)
+        return (near[0].day, gap > 60 ? 0.8 : 0.5)
     }
 
     /// Days from `a` to `b` (positive when `a` is earlier).
