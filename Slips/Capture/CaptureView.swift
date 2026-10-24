@@ -221,6 +221,13 @@ struct CaptureView: View {
                 AppModel.log.error("reading failed: \(String(describing: error), privacy: .private)")
             }
             phase = .saved(slip)
+            // An endpoint the user consented to for every slip reads it too, with the masked text only.
+            if let endpoint = model.router.endpoint(profile: slip.profileId, trigger: .automatic) {
+                let slips = model.slips
+                Task.detached(priority: .utility) {
+                    if let current = try? slips.slip(slip.id) { await EndpointAssistants.run(endpoint, on: current, slips: slips) }
+                }
+            }
             // The slip is saved and on screen; the on-device model proofreads it in the background.
             if let input, !input.ocrText.isEmpty, let assistant = OnDeviceAI.assistant() {
                 let slips = model.slips

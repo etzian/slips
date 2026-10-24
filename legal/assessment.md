@@ -86,3 +86,24 @@ To confirm on a release build, as `.claude/rules/release.md` requires.
 | Generated documents bundled in the app (About lists them when present) and `PrivacyInfo.xcprivacy` | After `ez legal gen .` |
 | `etzian:legal-compliance` review of the release | Before v0.1.0 |
 | Privacy label in App Store Connect | At submission |
+
+## 7. AI (M2, added 2026-10-24)
+
+| Part | What leaves the phone | Default | Consent |
+| --- | --- | --- | --- |
+| On-device model (Apple Foundation Models) | Nothing | On when the device supports it | Not needed: no transfer; disclosed in Settings › Privacy › AI and in the policy |
+| Ollama on the user's server | The slip's OCR text, 12+ digit runs masked to their last four | Off | Explicit, per profile, shown with the real text |
+| Claude API (Anthropic, US) | Same | Off | Explicit, per profile; says the text is processed outside Québec |
+| OpenAI API (US) | Same | Off | Same |
+
+- Law 25: automated processing is disclosed (the model only proposes; the user confirms every field).
+  Anthropic and OpenAI are transfers outside Québec: the EFVP needs a transfer assessment for each, and
+  both go in `_foundation/legal/vendors.yaml` with their API data-use terms (no training on API data is
+  the vendors' stated default; the lawyer should confirm).
+- Consent is stored with the provider, the scope ("only when I ask" or "every slip"), a version and the
+  date, and is asked again when any of them changes. Withdrawal turns the endpoint off and deletes the key;
+  text already sent cannot be recalled (said on the consent screen).
+- The API key is the user's own (their account with the vendor): the user, not Etzian, is the vendor's
+  customer. To confirm with the lawyer alongside §1.
+- Open: whether names of people that appear on a bill (a contractor's invoice, a medical receipt) need
+  more masking than card digits before an endpoint is used. The consent screen shows the real text.

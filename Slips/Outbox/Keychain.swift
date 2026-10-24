@@ -8,7 +8,23 @@ enum Keychain {
     static let service = "com.etzian.slips.destination"
 
     static func set(_ secret: String, for destination: UUID) throws {
-        let query = base(destination)
+        try set(secret, account: destination.uuidString)
+    }
+
+    static func get(_ destination: UUID) -> String? {
+        get(account: destination.uuidString)
+    }
+
+    static func delete(_ destination: UUID) {
+        delete(account: destination.uuidString)
+    }
+
+    // MARK: AI endpoint keys, one per profile and provider
+
+    static func aiAccount(profile: UUID, provider: String) -> String { "ai.\(profile.uuidString).\(provider)" }
+
+    static func set(_ secret: String, account: String) throws {
+        let query = base(account)
         SecItemDelete(query as CFDictionary)
         var add = query
         add[kSecValueData as String] = Data(secret.utf8)
@@ -17,8 +33,8 @@ enum Keychain {
         guard status == errSecSuccess else { throw KeychainError(status: status) }
     }
 
-    static func get(_ destination: UUID) -> String? {
-        var query = base(destination)
+    static func get(account: String) -> String? {
+        var query = base(account)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
@@ -26,14 +42,19 @@ enum Keychain {
         return String(data: data, encoding: .utf8)
     }
 
-    static func delete(_ destination: UUID) {
-        SecItemDelete(base(destination) as CFDictionary)
+    static func delete(account: String) {
+        SecItemDelete(base(account) as CFDictionary)
     }
 
-    private static func base(_ destination: UUID) -> [String: Any] {
+    /// Every AI key of a profile (erase, withdraw).
+    static func deleteAIKeys(profile: UUID) {
+        for provider in ["ollama", "claude", "openai"] { delete(account: aiAccount(profile: profile, provider: provider)) }
+    }
+
+    private static func base(_ account: String) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
          kSecAttrService as String: service,
-         kSecAttrAccount as String: destination.uuidString]
+         kSecAttrAccount as String: account]
     }
 }
 

@@ -13,6 +13,9 @@ enum Migrations {
             // What an AI assistant said about the slip (`AIResult` JSON), kept apart from the parser's output.
             try db.execute(sql: "ALTER TABLE slips ADD COLUMN ai TEXT")
         }
+        migrator.registerMigration("v4_ai_endpoints") { db in
+            try db.execute(sql: v4AIEndpoints)
+        }
     }
 
     /// Plan §3. Ids are UUIDs (16-byte blobs, GRDB's default), dates are GRDB date strings (UTC),
@@ -156,5 +159,23 @@ enum Migrations {
             INSERT INTO slips_fts(rowid, merchant, notes, ocr_text) VALUES (new.rowid, new.merchant, new.notes, new.ocr_text);
         END;
         INSERT INTO slips_fts(slips_fts) VALUES ('rebuild');
+        """
+
+    /// One optional AI endpoint per profile (M2 P4). Off by default; consent is stored with the exact
+    /// provider, scope and version it was given for. API keys live in the Keychain, never here.
+    static let v4AIEndpoints = """
+        CREATE TABLE ai_endpoints (
+            profile_id BLOB PRIMARY KEY NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            provider TEXT NOT NULL DEFAULT 'off' CHECK (provider IN ('off', 'ollama', 'claude', 'openai')),
+            base_url TEXT,
+            model TEXT,
+            local_network INTEGER NOT NULL DEFAULT 0 CHECK (local_network IN (0, 1)),
+            scope TEXT NOT NULL DEFAULT 'on_request' CHECK (scope IN ('on_request', 'every_slip')),
+            consent_provider TEXT,
+            consent_scope TEXT,
+            consent_version INTEGER,
+            consent_at TEXT,
+            updated_at TEXT NOT NULL
+        );
         """
 }

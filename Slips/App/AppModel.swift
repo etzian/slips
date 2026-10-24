@@ -14,6 +14,8 @@ final class AppModel {
     let slips: SlipStore
     let deliveries: DeliveryQueue
     let destinations: DestinationStore
+    let aiEndpoints: AIEndpointStore
+    let router: AssistantRouter
     let scheduler: DeliveryScheduler
     private(set) var activeProfileId: UUID?
     /// Set when the database could not be opened; the shell shows it instead of the tabs.
@@ -31,6 +33,8 @@ final class AppModel {
         self.slips = SlipStore(database: database, files: files)
         self.deliveries = DeliveryQueue(database: database)
         self.destinations = DestinationStore(database: database)
+        self.aiEndpoints = AIEndpointStore(database: database)
+        self.router = AssistantRouter(store: aiEndpoints, factory: EndpointAssistants.make)
         self.scheduler = DeliveryScheduler(database: database, files: files, adapters: DestinationAdapters.make)
         self.defaults = defaults
         self.firstRunDone = FirstRunState(defaults: defaults).isDone
@@ -103,8 +107,10 @@ final class AppModel {
     /// Erase all data on this iPhone: rows, slip files, Keychain items, preferences. Delivered copies
     /// stay where they are. The app then starts over with a fresh profile and the first-run screen.
     func eraseAll() throws {
+        let profiles = (try? database.profiles().map(\.id)) ?? []
         let destinations = try Eraser(database: database, files: files).eraseAll()
         destinations.forEach(Keychain.delete)
+        profiles.forEach(Keychain.deleteAIKeys)
         for key in [Self.activeProfileKey, FirstRunState.key, AppLock.key, Appearance.storageKey] {
             defaults.removeObject(forKey: key)
         }

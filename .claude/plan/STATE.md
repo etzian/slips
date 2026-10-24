@@ -70,7 +70,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P1 | AI seam in core: assistant protocol, merge, disagreement checks | done |
 | P2 | On-device Foundation Models adapter, on by default | done |
 | P3 | Suggestions from history improved | done |
-| P4 | Endpoint settings, consent, masking, data map | pending |
+| P4 | Endpoint settings, consent, masking, data map | done |
 | P5 | Ollama adapter (LAN) | pending |
 | P6 | Claude API adapter | pending |
 | P7 | OpenAI (ChatGPT) API adapter | pending |
@@ -106,7 +106,7 @@ Gate steps 1, 3, 4, 5 exit 0 (143 core tests). App sources parse-checked only.
 - DEFERRED: none
 - MANUAL: on the Mac with Apple Intelligence on, run the simulator (macOS 26 shares the model with the simulator only if supported; otherwise "My Mac (Designed for iPhone)" or wait for the iPhone): import a few synthetic slips, check the sparkles and any `ai_disagrees_*` checks; turn the switch off and check nothing runs
 
-### P3 — suggestions from history · pass (Linux; Mac gate to confirm) · 2026-10-23
+### P3 — suggestions from history · pass (Mac gate green) · 2026-10-23 · commit 58ec877
 
 Gate steps 1, 3, 4, 5 exit 0 (145 core tests). App sources parse-checked only.
 
@@ -132,3 +132,20 @@ Gate steps 1, 3, 4, 5 exit 0 (145 core tests). App sources parse-checked only.
   highlighted (OCR slip on the year). Reference day: an imported file's name date ("Adobe Scan 20 oct.
   2026"), else its modification day; a scan uses today.
 - GST numbers printed in groups (`12345-6789 RT0001`). Synthetic fixture 29.
+
+### P4 — endpoint settings and consent · pass (Linux; Mac gate to confirm) · 2026-10-24
+
+Gate steps 1, 3, 4, 5 exit 0 (163 core tests). App sources parse-checked only. No adapter yet: the
+router's factory returns nil for every provider, so nothing can be sent until P5–P7.
+
+- CHANGED: migration `v4_ai_endpoints` (one row per profile, provider CHECK, consent provider/scope/version/date);
+  core `AI/AIEndpoints.swift` (`AIProvider`, `AIScope`, `AIEndpointSettings.hasConsent`, `AIEndpointStore`
+  save/consent/withdraw, `AIPrivacy.mask`/`input`, `AssistantRouter`); `AIEndpointTests.swift`; app
+  Keychain AI accounts (`ai.<profile>.<provider>`, deleted on withdraw and erase), `AI/EndpointAssistants.swift`
+  (factory stub, run with 60 s limit), `AI/AIEndpointView.swift` (Settings › Privacy › AI › Online AI) and
+  `AIConsentView` (who, when, the real masked text of the latest slip, never sent, outside Québec), "Ask the
+  online AI" on the review screen, automatic run after capture when the scope is "every slip"; data map
+  (`features.ai_processing`, three recipients, `ocr_text_masked`), `legal/assessment.md` §7; 40 catalog keys
+- DECISIONS: The router is the only way to an endpoint: provider ≠ off **and** consent for that provider, that scope and the current version (`consentVersion * 1000 + AssistantPrompt.version`); automatic runs need scope "every slip". Saving another provider or scope drops the consent; the settings screen stores a provider/scope change at once. Masking: every run of 12+ digits (separators allowed) keeps its last four; 9/10-digit registration numbers, phone numbers and amounts stay. Sent: OCR text, locale, currency, reference day; never image, notes, names of profiles/businesses/payment methods. Default models (to be settled by P8): Ollama `llama3.2`, Claude `claude-haiku-5-5`, OpenAI `gpt-5-mini`.
+- DEFERRED: vendors Anthropic and OpenAI in `_foundation/legal/vendors.yaml` (foundation legal layer)
+- MANUAL: none (nothing can be sent yet)

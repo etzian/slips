@@ -43,6 +43,9 @@ struct PrivacyView: View {
             Section {
                 Toggle("ai.onDevice.toggle", isOn: $aiOnDevice)
                     .accessibilityIdentifier("ai.onDevice.toggle")
+                if let profile = model.activeProfileId {
+                    NavigationLink("ai.endpoint.title") { AIEndpointView(profileId: profile) }
+                }
             } header: {
                 Text("ai.section")
             } footer: {

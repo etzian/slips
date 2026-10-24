@@ -56,7 +56,7 @@ data:
     stored: device
     retention: Until the destination is removed or data is erased.
   - id: destination_secrets
-    what: WebDAV passwords.
+    what: WebDAV passwords and AI API keys (Claude, OpenAI).
     personal_information: true
     stored: keychain              # kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, never synced
     retention: Until the destination is removed or data is erased.
@@ -97,6 +97,28 @@ recipients:                     # every destination is off by default (Law 25, p
   - id: fin
     who: The user's fin server (M4, not in this release).
     default: off
+  - id: ai_ollama
+    who: An Ollama server the user runs (LAN or their own host).
+    receives: [ocr_text_masked]
+    default: off
+    consent: explicit, per profile
+    transfer_outside_quebec: depends on the server's location
+  - id: ai_anthropic
+    who: Anthropic (Claude API), United States.
+    vendor: anthropic              # to add to _foundation/legal/vendors.yaml
+    receives: [ocr_text_masked]
+    default: off
+    consent: explicit, per profile
+    transfer_outside_quebec: true  # EFVP transfer assessment required before release
+  - id: ai_openai
+    who: OpenAI (API), United States.
+    vendor: openai                 # to add to _foundation/legal/vendors.yaml
+    receives: [ocr_text_masked]
+    default: off
+    consent: explicit, per profile
+    transfer_outside_quebec: true  # EFVP transfer assessment required before release
+
+ocr_text_masked: The text OCR read on one slip, with every run of 12 or more digits reduced to its last four.
 
 slip_sidecar_when_on: JSON next to the PDF with slip_fields (docs/SIDECAR.md); no card digits.
 export_csv_json_zip: docs/EXPORT.md; made on the device, leaves only through the share sheet.
@@ -105,6 +127,9 @@ automated_processing:
   ocr: On-device (Vision). No image or text leaves the device for recognition.
   parsing_and_checks: On-device rules (SlipsCore). No decision with legal effect; the user confirms every field.
   ai_on_device: Apple's on-device model (Foundation Models, iOS 26, Apple Intelligence) re-reads the OCR text of each slip and flags disagreements; it may fill fields the parser left empty. On by default, runs on the device only, nothing is sent. Settings › Privacy › AI turns it off. (M2)
-  ai_endpoints: none yet (M2 P4 adds optional, off-by-default endpoints — a data-map change and a legal review).
+  ai_endpoints: optional, per profile, off by default (M2). After explicit consent to the provider, the scope (only on request, or every slip) and the exact text sent, the slip's OCR text with every run of 12+ digits reduced to its last four is sent to the chosen service; never the image, notes, or names of profiles, businesses or payment methods. Consent is stored (provider, scope, version, date) and asked again when any of them changes; withdrawing turns it off and deletes the key.
+
+features:
+  ai_processing: true            # M2: on-device model (on by default), optional endpoints (off by default)
 
 erasure: Settings › Danger zone › "Erase all data on this iPhone" removes every slip file, every row, the Keychain items and preferences. Copies already delivered to destinations are not touched; the screen says so.

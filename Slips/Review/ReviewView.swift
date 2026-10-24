@@ -23,6 +23,7 @@ struct ReviewView: View {
     @State private var confirmDiscard = false
     /// What the pickers were pre-filled with, and why; nil when the slip was already classified.
     @State private var suggestion: Suggestion?
+    @State private var asking = false
 
     var body: some View {
         Group {
@@ -87,6 +88,23 @@ struct ReviewView: View {
             ChecksSection(slip: slip.wrappedValue) { last4 in
                 newPaymentMethod = PaymentMethod(profileId: slip.wrappedValue.profileId, name: "", type: .creditCard, last4: last4,
                                                  currency: slip.wrappedValue.currency)
+            }
+
+            if let endpoint = model.router.endpoint(profile: slip.wrappedValue.profileId, trigger: .userRequest) {
+                Section {
+                    Button {
+                        ask(endpoint, slip.wrappedValue)
+                    } label: {
+                        HStack {
+                            Label("ai.ask", systemImage: "sparkles")
+                            if asking { Spacer(); ProgressView() }
+                        }
+                    }
+                    .disabled(asking || slip.wrappedValue.ocrText == nil)
+                    .accessibilityIdentifier("ai.ask")
+                } footer: {
+                    Text("ai.ask.footer")
+                }
             }
 
             Section("review.classification") {
@@ -207,6 +225,16 @@ struct ReviewView: View {
     private func amount(_ label: LocalizedStringKey, _ value: Binding<Int?>, _ low: Bool, _ ai: Bool, _ currency: String) -> some View {
         FieldRow(label: label, low: low, ai: ai) {
             MoneyField(label: label, minorUnits: value, currency: currency)
+        }
+    }
+
+    /// Sends this slip's masked text to the consented endpoint; the result arrives like the on-device one.
+    private func ask(_ endpoint: any ExtractionAssistant, _ slip: Slip) {
+        asking = true
+        let slips = model.slips
+        Task {
+            await EndpointAssistants.run(endpoint, on: slip, slips: slips)
+            asking = false
         }
     }
 
