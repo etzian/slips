@@ -19,7 +19,9 @@ import Testing
         let props = try #require(schema["properties"] as? [String: Any])
         #expect(props.count == AssistantPrompt.fields.count)
         let total = try #require(props["total"] as? [String: Any])
-        #expect(total["type"] as? [String] == ["number", "null"])
+        let options = try #require(total["anyOf"] as? [[String: String]])
+        #expect(options == [["type": "number"], ["type": "null"]])
+        #expect(schema["additionalProperties"] as? Bool == false)
         #expect(JSONSerialization.isValidJSONObject(schema))
     }
 

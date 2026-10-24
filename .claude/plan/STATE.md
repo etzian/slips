@@ -72,7 +72,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P3 | Suggestions from history improved | done |
 | P4 | Endpoint settings, consent, masking, data map | done |
 | P5 | Ollama adapter (LAN) | done |
-| P6 | Claude API adapter | pending |
+| P6 | Claude API adapter | done |
 | P7 | OpenAI (ChatGPT) API adapter | pending |
 | P8 | Evaluation harness and model choice | pending |
 | P9 | Polish: fr-CA parity, docs, legal assessment, v0.0.2 | pending |
@@ -162,3 +162,18 @@ Gate steps 1, 3, 4, 5 exit 0 (167 core tests). App sources parse-checked only.
 - DECISIONS: Request timeout 60 s. 401/403 → `unauthorized`, other non-2xx → `http(status)`, transport failure → `network`, a reply that is not the schema's JSON → `badAnswer`; the caller logs and drops every one. The body never has an `images` key. Default model `llama3.2` until P8.
 - DEFERRED: none
 - MANUAL: with an Ollama server on the LAN (`ollama serve`, `ollama pull llama3.2`, `OLLAMA_HOST=0.0.0.0`): Settings › Privacy › AI › Online AI › Ollama, address `http://<mac-ip>:11434`, "On my local network", Test the connection, agree, then "Ask the online AI" on a slip
+
+### P6 — Claude API adapter · pass (Linux; Mac gate to confirm) · 2026-10-24
+
+Gate steps 1, 3, 4, 5 exit 0 (170 core tests). App sources parse-checked only.
+
+- CHANGED: core `AI/ClaudeAssistant.swift` (raw HTTP, no Swift SDK: `POST /v1/messages`, `x-api-key`,
+  `anthropic-version: 2026-10-21`; system = the shared instructions with `cache_control: ephemeral`; one user
+  turn with the masked text; `output_config.format` = `AssistantPrompt.jsonSchema`, `effort: low`);
+  `ClaudeTests.swift` (`FakeMessagesAPI`: headers, request shape, text only, masking, no temperature,
+  refusal, 401/429/529, missing key sends nothing, user model); `AssistantPrompt.jsonSchema` nullable fields
+  now `anyOf [{type}, {type: null}]` (the form structured outputs accept; Ollama takes it too); app factory
+  builds it when a key is saved for the profile
+- DECISIONS: Structured outputs instead of a forced tool: the answer is constrained JSON, nothing else. No `temperature` (refused under this API version). 401 → `unauthorized`; 429, 5xx, 529 → `http(status)`, not retried (the slip keeps its on-device reading; the user can ask again); `stop_reason` `refusal` or `max_tokens` → `badAnswer`. Default model `claude-haiku-5-5` until P8; a model typed in the settings wins.
+- DEFERRED: none
+- MANUAL: with your own Anthropic API key: Settings › Privacy › AI › Online AI › Claude, paste the key, agree, then "Ask the online AI" on a slip (costs a fraction of a cent per slip)

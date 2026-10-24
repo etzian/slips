@@ -1,20 +1,31 @@
 import Foundation
 import SlipsCore
 
-/// Builds the endpoint adapter for a profile's consented settings (M2 P5–P7). The router has already
+/// Builds the endpoint adapter for a profile's consented settings (M2 P5–P7: Ollama, Claude, OpenAI). The router has already
 /// checked consent and scope; a provider without an adapter yet returns nil, so nothing is sent.
 enum EndpointAssistants {
     @Sendable static func make(_ settings: AIEndpointSettings) -> (any ExtractionAssistant)? {
         switch settings.provider {
         case .ollama:
             OllamaAssistant(settings: settings, defaultModel: settings.provider.defaultModel, transport: transport)
-        case .off, .claude, .openai:
+        case .claude:
+            // No key saved: nothing to send with, so no adapter (the settings screen asks for one).
+            key(settings).flatMap { key in
+                key.isEmpty ? nil : ClaudeAssistant(model: model(settings), apiKey: key, transport: transport)
+            }
+        case .off, .openai:
             nil
         }
     }
 
     /// Plain HTTPS (or LAN HTTP when allowed); an ephemeral session keeps no cookies or cache.
     static let transport = URLSessionTransport(session: URLSession(configuration: .ephemeral))
+
+    /// The model the user typed, else the provider's default.
+    static func model(_ settings: AIEndpointSettings) -> String {
+        let typed = settings.model?.trimmingCharacters(in: .whitespaces) ?? ""
+        return typed.isEmpty ? settings.provider.defaultModel : typed
+    }
 
     /// The key saved for this profile and provider, if the provider needs one.
     static func key(_ settings: AIEndpointSettings) -> String? {

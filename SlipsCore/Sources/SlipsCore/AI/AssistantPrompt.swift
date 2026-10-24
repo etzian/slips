@@ -45,11 +45,12 @@ public enum AssistantPrompt {
         ("subcategory_key", "string", "One key from the list, or null"),
     ]
 
-    /// A JSON Schema object for the answer (every field nullable, none required beyond presence).
+    /// A JSON Schema object for the answer: every field present, each a value or null (`anyOf`, the
+    /// form structured outputs accept), no other key.
     public static var jsonSchema: [String: Any] {
         var properties: [String: Any] = [:]
         for f in fields {
-            properties[f.name] = ["type": [f.type, "null"], "description": f.description]
+            properties[f.name] = ["anyOf": [["type": f.type], ["type": "null"]], "description": f.description]
         }
         return ["type": "object", "properties": properties, "required": fields.map(\.name), "additionalProperties": false]
     }
