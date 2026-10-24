@@ -71,7 +71,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P2 | On-device Foundation Models adapter, on by default | done |
 | P3 | Suggestions from history improved | done |
 | P4 | Endpoint settings, consent, masking, data map | done |
-| P5 | Ollama adapter (LAN) | pending |
+| P5 | Ollama adapter (LAN) | done |
 | P6 | Claude API adapter | pending |
 | P7 | OpenAI (ChatGPT) API adapter | pending |
 | P8 | Evaluation harness and model choice | pending |
@@ -133,7 +133,7 @@ Gate steps 1, 3, 4, 5 exit 0 (145 core tests). App sources parse-checked only.
   2026"), else its modification day; a scan uses today.
 - GST numbers printed in groups (`12345-6789 RT0001`). Synthetic fixture 29.
 
-### P4 — endpoint settings and consent · pass (Linux; Mac gate to confirm) · 2026-10-24
+### P4 — endpoint settings and consent · pass (Mac gate green) · 2026-10-24 · commit 3697745
 
 Gate steps 1, 3, 4, 5 exit 0 (163 core tests). App sources parse-checked only. No adapter yet: the
 router's factory returns nil for every provider, so nothing can be sent until P5–P7.
@@ -149,3 +149,16 @@ router's factory returns nil for every provider, so nothing can be sent until P5
 - DECISIONS: The router is the only way to an endpoint: provider ≠ off **and** consent for that provider, that scope and the current version (`consentVersion * 1000 + AssistantPrompt.version`); automatic runs need scope "every slip". Saving another provider or scope drops the consent; the settings screen stores a provider/scope change at once. Masking: every run of 12+ digits (separators allowed) keeps its last four; 9/10-digit registration numbers, phone numbers and amounts stay. Sent: OCR text, locale, currency, reference day; never image, notes, names of profiles/businesses/payment methods. Default models (to be settled by P8): Ollama `llama3.2`, Claude `claude-haiku-5-5`, OpenAI `gpt-5-mini`.
 - DEFERRED: vendors Anthropic and OpenAI in `_foundation/legal/vendors.yaml` (foundation legal layer)
 - MANUAL: none (nothing can be sent yet)
+
+### P5 — Ollama adapter · pass (Linux; Mac gate to confirm) · 2026-10-24
+
+Gate steps 1, 3, 4, 5 exit 0 (167 core tests). App sources parse-checked only.
+
+- CHANGED: core `AI/OllamaAssistant.swift` (`AIEndpointError`; `/api/chat`, `stream: false`, `format` =
+  `AssistantPrompt.jsonSchema`, temperature 0, system + user messages; probe `/api/tags` 3 s; init from
+  settings with the WebDAV HTTPS rule); `OllamaTests.swift` (`FakeOllama`); app factory builds it for a
+  consented Ollama profile (ephemeral `URLSession`), "Test the connection" on the settings screen (probe
+  only, no slip text)
+- DECISIONS: Request timeout 60 s. 401/403 → `unauthorized`, other non-2xx → `http(status)`, transport failure → `network`, a reply that is not the schema's JSON → `badAnswer`; the caller logs and drops every one. The body never has an `images` key. Default model `llama3.2` until P8.
+- DEFERRED: none
+- MANUAL: with an Ollama server on the LAN (`ollama serve`, `ollama pull llama3.2`, `OLLAMA_HOST=0.0.0.0`): Settings › Privacy › AI › Online AI › Ollama, address `http://<mac-ip>:11434`, "On my local network", Test the connection, agree, then "Ask the online AI" on a slip

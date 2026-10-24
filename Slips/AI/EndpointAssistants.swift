@@ -6,10 +6,15 @@ import SlipsCore
 enum EndpointAssistants {
     @Sendable static func make(_ settings: AIEndpointSettings) -> (any ExtractionAssistant)? {
         switch settings.provider {
-        case .off, .ollama, .claude, .openai:
+        case .ollama:
+            OllamaAssistant(settings: settings, defaultModel: settings.provider.defaultModel, transport: transport)
+        case .off, .claude, .openai:
             nil
         }
     }
+
+    /// Plain HTTPS (or LAN HTTP when allowed); an ephemeral session keeps no cookies or cache.
+    static let transport = URLSessionTransport(session: URLSession(configuration: .ephemeral))
 
     /// The key saved for this profile and provider, if the provider needs one.
     static func key(_ settings: AIEndpointSettings) -> String? {

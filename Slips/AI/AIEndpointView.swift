@@ -11,6 +11,8 @@ struct AIEndpointView: View {
     @State private var showConsent = false
     @State private var problem: LocalizedStringKey?
     @State private var error: LocalizedStringKey?
+    @State private var testing = false
+    @State private var testResult: LocalizedStringKey?
 
     var body: some View {
         Form {
@@ -66,6 +68,16 @@ struct AIEndpointView: View {
                         .foregroundStyle(EZ.Color.warning)
                 }
                 if let problem { Text(problem).font(.footnote).foregroundStyle(EZ.Color.error) }
+                Button {
+                    Task { await testOllama(s.wrappedValue) }
+                } label: {
+                    HStack {
+                        Text("webdav.test")
+                        if testing { Spacer(); ProgressView() }
+                    }
+                }
+                .disabled(testing)
+                if let testResult { Text(testResult).font(.footnote) }
             }
         }
 
@@ -103,6 +115,22 @@ struct AIEndpointView: View {
                     .accessibilityIdentifier("ai.consent.review")
                 Button("ai.endpoint.withdraw", role: .destructive) { withdraw() }
             }
+        }
+    }
+
+    /// Reaches `/api/tags` only: no slip text is sent by a test.
+    private func testOllama(_ s: AIEndpointSettings) async {
+        guard let assistant = OllamaAssistant(settings: s, defaultModel: s.provider.defaultModel, transport: EndpointAssistants.transport)
+        else {
+            testResult = "webdav.problem.insecure"
+            return
+        }
+        testing = true
+        defer { testing = false }
+        switch await assistant.probe() {
+        case .reachable: testResult = "webdav.test.ok"
+        case .needsAuth: testResult = "webdav.test.auth"
+        case .unreachable: testResult = "webdav.test.unreachable"
         }
     }
 
