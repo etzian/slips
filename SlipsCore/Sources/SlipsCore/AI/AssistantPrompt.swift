@@ -12,7 +12,7 @@ public enum AssistantPrompt {
         Answer only with the requested fields. Use null when a field is not printed; never guess. \
         Amounts are what is printed, as numbers with a dot for decimals (12.34), without currency signs. \
         "TPS"/"GST" is the 5 % federal tax, "TVQ"/"QST" the 9.975 % Québec tax, "TVH"/"HST" the harmonised tax. \
-        "total" is the amount paid, including tip. The date is the transaction date, as YYYY-MM-DD. \
+        "total" is the amount paid, including tip. A tax that is not printed is null, never computed. The date is the transaction date, as YYYY-MM-DD. \
         GST numbers look like 123456789 RT0001, QST numbers like 1234567890 TQ0001. \
         For subcategory_key, choose the best fitting key from this list, or null: \(Seed.allKeys.joined(separator: ", ")).
         """
@@ -22,6 +22,10 @@ public enum AssistantPrompt {
     public static func message(_ input: AssistantInput) -> String {
         var text = "Locale: \(input.localeIdentifier)\n"
         if let c = input.currencyHint { text += "Currency printed or assumed: \(c)\n" }
+        if let d = input.referenceDay {
+            text += "Scanned on or around \(d.iso); the transaction date is that day or earlier. "
+            text += "Numeric dates may be DD/MM/YY, MM/DD/YY or YY/MM/DD: choose the reading closest to that day.\n"
+        }
         return text + "Slip text:\n" + input.ocrText
     }
 

@@ -117,3 +117,15 @@ Gate steps 1, 3, 4, 5 exit 0 (145 core tests). App sources parse-checked only.
 - DECISIONS: Tiers, best first, each field taking the first that gives an active value fitting the kind: card (payment method + its default kind/business) → same merchant (recency weight, half-life 90 days, majority by weight, tie to the most recent) → similar total ±25 % with the same payment method → most recent filed slip → AI key (sub-category only). History comes from filed (`ready`) slips, no longer from `merchant_memory` (still written; may be dropped later).
 - DEFERRED: none
 - MANUAL: none
+
+### Fix after P3 · real-slip feedback (zero-rated grocery slip, YY/MM/DD date) · 2026-10-24
+
+- AI may not add amounts that break a slip whose amounts add up: a tax that is not printed is zero
+  (`AIMerge.merge` reverts its amount fills then). An AI reading whose own amounts do not add up raises no
+  total check; a different total is `info` when the slip adds up, `warning` only when it does not. The
+  prompt says untaxed is null and gives the reference day.
+- Numeric dates: every valid reading (DD/MM/YY, MM/DD/YY, YY/MM/DD; DD/MM/YYYY, MM/DD/YYYY) is kept;
+  readings after the reference day are dropped; the closest wins (0.8 when > 60 days clearer, else the
+  usual style at 0.5, highlighted). Reference day: an imported file's name date ("Adobe Scan 20 oct.
+  2026"), else its modification day; a scan uses today.
+- GST numbers printed in groups (`12345-6789 RT0001`). Synthetic fixture 29.

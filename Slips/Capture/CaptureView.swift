@@ -123,6 +123,7 @@ struct CaptureView: View {
             return
         }
         phase = .saving
+        let reference = Self.referenceDay(for: urls)
         Task {
             let images = await Task.detached(priority: .userInitiated) { () -> [UIImage] in
                 urls.flatMap { url -> [UIImage] in
@@ -141,9 +142,18 @@ struct CaptureView: View {
             if images.isEmpty {
                 phase = .failed(String(localized: "capture.error.noImage"))
             } else {
-                process(images: images)
+                process(images: images, reference: reference)
             }
         }
+    }
+
+    /// The date in the first file's name ("Adobe Scan 20 oct. 2026.pdf"), else its modification day.
+    private static func referenceDay(for urls: [URL]) -> CalendarDay? {
+        guard let url = urls.first else { return nil }
+        if let day = SlipParser.referenceDay(fromFileName: url.lastPathComponent) { return day }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        return (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate.map { CalendarDay($0) }
     }
 
     /// A PDF page as an image at the scanner's resolution (long edge ≈ 2000 px), on white.
@@ -172,7 +182,9 @@ struct CaptureView: View {
 
     /// JPEG + PDF off the main thread, then the file and the row; only then OCR, the text layer and
     /// the parser. A failure after the save never loses the slip: it stays a draft without fields.
-    private func process(images: [UIImage]) {
+    /// `reference`: the day the slip is known to be from or after (an imported file's name or date);
+    /// a scan uses today. It decides between readings like 26/10/20 = 20 Oct 2026 or 26 Oct 2020.
+    private func process(images: [UIImage], reference: CalendarDay? = nil) {
         guard let profile = model.activeProfileId else { return }
         phase = .saving
         let store = model.capture
@@ -197,11 +209,12 @@ struct CaptureView: View {
                     let lines = try OCRService.recognize(pages: pages)
                     let searchable = try PDFBuilder.pdf(pages: pages, text: OCRService.pageText(lines, pageCount: pages.count))
                     try store.replacePDF(of: slip.id, with: searchable)
-                    let extraction = SlipParser.parse(lines, today: CalendarDay(Date()))
+                    let referenceDay = reference ?? CalendarDay(Date())
+                    let extraction = SlipParser.parse(lines, today: referenceDay)
                     let text = SlipParser.text(of: lines)
                     try store.recordExtraction(extraction, ocrText: text, for: slip.id)
                     return AssistantInput(ocrText: text, localeIdentifier: Locale.current.identifier,
-                                          currencyHint: extraction.currency?.value)
+                                          currencyHint: extraction.currency?.value, referenceDay: referenceDay)
                 }.value
             } catch {
                 AppModel.log.error("reading failed: \(String(describing: error), privacy: .private)")

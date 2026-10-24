@@ -7,11 +7,14 @@ public struct AssistantInput: Sendable, Hashable {
     public var localeIdentifier: String
     /// The currency the parser read, if any.
     public var currencyHint: String?
+    /// When the slip was scanned, or the date in an imported file's name: the slip is from then or before.
+    public var referenceDay: CalendarDay?
 
-    public init(ocrText: String, localeIdentifier: String, currencyHint: String? = nil) {
+    public init(ocrText: String, localeIdentifier: String, currencyHint: String? = nil, referenceDay: CalendarDay? = nil) {
         self.ocrText = ocrText
         self.localeIdentifier = localeIdentifier
         self.currencyHint = currencyHint
+        self.referenceDay = referenceDay
     }
 }
 
@@ -103,7 +106,45 @@ public enum AIMerge {
         fill("total", \.total, parser: parsed.total, assistant: ai.total)
         fill("supplier_gst_no", \.supplierGstNo, parser: parsed.supplierGstNo, assistant: ai.supplierGstNo)
         fill("supplier_qst_no", \.supplierQstNo, parser: parsed.supplierQstNo, assistant: ai.supplierQstNo)
+
+        // A tax that is not printed is zero, not unknown: amounts that add up stay as they are. If the
+        // assistant's amounts would break a slip that adds up, none of its amounts are taken.
+        let amounts = ["subtotal", "gst", "qst", "hst", "tip", "total"]
+        if filled.contains(where: amounts.contains), addsUp(slip), !addsUp(s) {
+            s.subtotal = slip.subtotal
+            s.gst = slip.gst
+            s.qst = slip.qst
+            s.hst = slip.hst
+            s.tip = slip.tip
+            s.total = slip.total
+            filled.removeAll(where: amounts.contains)
+        }
         return (s, filled)
+    }
+
+    /// Subtotal + taxes + tip = total (± 2 ¢) and no tax above its rate; true when there is no
+    /// subtotal or no total to check.
+    static func addsUp(_ s: Slip) -> Bool {
+        var e = Extraction()
+        e.subtotal = s.subtotal.map { ExtractedField(value: $0, confidence: 1) }
+        e.gst = s.gst.map { ExtractedField(value: $0, confidence: 1) }
+        e.qst = s.qst.map { ExtractedField(value: $0, confidence: 1) }
+        e.hst = s.hst.map { ExtractedField(value: $0, confidence: 1) }
+        e.tip = s.tip.map { ExtractedField(value: $0, confidence: 1) }
+        e.total = s.total.map { ExtractedField(value: $0, confidence: 1) }
+        return SlipParser.isConsistent(e)
+    }
+
+    /// The assistant's own amounts add up (or it gave too few to tell).
+    static func selfConsistent(_ ai: AIExtraction) -> Bool {
+        var e = Extraction()
+        e.subtotal = ai.subtotal
+        e.gst = ai.gst
+        e.qst = ai.qst
+        e.hst = ai.hst
+        e.tip = ai.tip
+        e.total = ai.total
+        return SlipParser.isConsistent(e)
     }
 
     /// Drops what an assistant may not say: unknown sub-category keys, negative amounts, a currency

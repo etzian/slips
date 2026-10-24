@@ -1,0 +1,15 @@
+{
+  "required": ["date", "subtotal", "total", "card_last4", "supplier_gst_no", "supplier_qst_no"],
+  "fields": {
+    "merchant": "EPICERIE EXEMPLE ST-ICI (#0029)",
+    "date": "2026-10-21",
+    "subtotal": 1216,
+    "gst": null,
+    "qst": null,
+    "total": 1216,
+    "card_last4": "0029",
+    "supplier_gst_no": "100000029 RT0001",
+    "supplier_qst_no": "1000000029 TQ0002"
+  },
+  "low_confidence": []
+}

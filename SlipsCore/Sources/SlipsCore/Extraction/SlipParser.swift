@@ -250,25 +250,63 @@ public enum SlipParser {
            let d = CalendarDay(year: Int(g[3])!, month: month, day: Int(g[2])!) {
             return (d, 0.9)
         }
-        // Numeric, year last: day/month or month/day.
+        // Numeric: day/month/year, month/day/year, and with a two-digit first part year/month/day
+        // (`26/10/20` is 2026-10-20 on some terminals). Every valid reading is kept, then the one
+        // closest to the reference day (the scan, or the date in an imported file's name) wins.
         if let g = text.regexFirstMatch(#"(?<![\d.,])(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?![\d.,]\d)"#) {
-            let a = Int(g[1])!, b = Int(g[2])!, year = fullYear(g[3])
-            let dayFirst = CalendarDay(year: year, month: b, day: a)
-            let monthFirst = CalendarDay(year: year, month: a, day: b)
-            switch (dayFirst, monthFirst) {
-            case let (d?, nil): return (d, 0.9)
-            case let (nil, m?): return (m, 0.9)
-            case let (d?, m?) where d == m: return (d, 0.9)
-            case let (d?, m?):
-                if let today {
-                    if d > today && m <= today { return (m, 0.7) }
-                    if m > today && d <= today { return (d, 0.7) }
-                }
-                // Both readings possible: a two-digit year is the US-style terminal (MM/DD/YY),
-                // a four-digit year the Québec style (DD/MM/YYYY).
-                return g[3].count == 2 ? (m, 0.5) : (d, 0.5)
-            default: return nil
+            let a = Int(g[1])!, b = Int(g[2])!, last = g[3], year = fullYear(last)
+            // Rank breaks ties: a four-digit year is the Québec style (DD/MM/YYYY), a two-digit one the
+            // US-style terminal (MM/DD/YY).
+            var readings: [(day: CalendarDay, rank: Int)] = []
+            func add(_ d: CalendarDay?, _ rank: Int) {
+                if let d, !readings.contains(where: { $0.day == d }) { readings.append((d, rank)) }
             }
+            add(CalendarDay(year: year, month: b, day: a), last.count == 4 ? 0 : 1)
+            add(CalendarDay(year: year, month: a, day: b), last.count == 4 ? 1 : 0)
+            if last.count == 2 { add(CalendarDay(year: 2000 + a, month: b, day: Int(last)!), 2) }
+            return choose(readings, reference: today)
+        }
+        return nil
+    }
+
+    /// One reading → sure. Several → drop those after the reference day (a slip is never from the
+    /// future), take the closest; sure-ish (0.8) when it is clearly closer than the next, otherwise
+    /// the usual style at 0.5 so the review screen highlights it.
+    static func choose(_ readings: [(day: CalendarDay, rank: Int)], reference: CalendarDay?) -> (CalendarDay, Double)? {
+        guard !readings.isEmpty else { return nil }
+        if readings.count == 1 { return (readings[0].day, 0.9) }
+        let byRank = readings.sorted { $0.rank < $1.rank }
+        guard let reference else { return (byRank[0].day, 0.5) }
+        let past = readings.filter { daysBetween($0.day, reference) >= -1 }
+        guard !past.isEmpty else { return (byRank[0].day, 0.5) }
+        if past.count == 1 { return (past[0].day, 0.8) }
+        let near = past.sorted { (abs(daysBetween($0.day, reference)), $0.rank) < (abs(daysBetween($1.day, reference)), $1.rank) }
+        let gap = abs(daysBetween(near[1].day, reference)) - abs(daysBetween(near[0].day, reference))
+        if gap > 60 { return (near[0].day, 0.8) }
+        return (past.sorted { $0.rank < $1.rank }[0].day, 0.5)
+    }
+
+    /// Days from `a` to `b` (positive when `a` is earlier).
+    static func daysBetween(_ a: CalendarDay, _ b: CalendarDay) -> Int {
+        let utc = NamingRule.utc
+        return utc.dateComponents([.day], from: a.date(in: utc), to: b.date(in: utc)).day ?? 0
+    }
+
+    /// A date written in a file name ("Adobe Scan 20 oct. 2026 (2).pdf", "IMG_20261020_174812.jpg"),
+    /// used as the reference day for an imported slip.
+    public static func referenceDay(fromFileName name: String) -> CalendarDay? {
+        let base = (name as NSString).deletingPathExtension
+        if let g = base.regexFirstMatch(#"(?<!\d)(20\d{2})[-_.]?(\d{2})[-_.]?(\d{2})(?!\d)"#),
+           let d = CalendarDay(year: Int(g[1])!, month: Int(g[2])!, day: Int(g[3])!) {
+            return d
+        }
+        let norm = Row.normalize(base)
+        if let g = norm.regexFirstMatch(#"(?<!\d)(\d{1,2})[ -]?([A-Z]{3,9})\.?[ -]?(\d{4})(?!\d)"#),
+           let month = frenchMonths[g[2]] ?? englishMonths[g[2]] {
+            return CalendarDay(year: Int(g[3])!, month: month, day: Int(g[1])!)
+        }
+        if let g = norm.regexFirstMatch(#"\b([A-Z]{3,9})\.? (\d{1,2}),? (\d{4})(?!\d)"#), let month = englishMonths[g[1]] {
+            return CalendarDay(year: Int(g[3])!, month: month, day: Int(g[2])!)
         }
         return nil
     }
@@ -293,8 +331,10 @@ public enum SlipParser {
     /// Business number + `RT` program account: `123456789 RT0001`.
     static func gstNumber(_ rows: [Row]) -> ExtractedField<String>? {
         for r in rows {
-            if let g = r.norm.regexFirstMatch(#"(?<!\d)(\d{9}) ?RT ?(\d{4})(?!\d)"#) {
-                return r.field("\(g[1]) RT\(g[2])", 0.95)
+            // Nine digits, sometimes printed in groups ("12223-5922 RT0001").
+            if let g = r.norm.regexFirstMatch(#"(?<![\d-])((?:\d[ -]?){8}\d) ?RT ?(\d{4})(?!\d)"#) {
+                let digits = g[1].filter(\.isNumber)
+                if digits.count == 9 { return r.field("\(digits) RT\(g[2])", 0.95) }
             }
         }
         // Many terminals print only the 9-digit business number after the label ("TPS: 123456789").

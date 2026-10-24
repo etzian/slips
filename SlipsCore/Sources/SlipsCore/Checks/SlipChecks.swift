@@ -123,8 +123,11 @@ public enum SlipChecks {
     static func aiDisagreements(_ slip: Slip, _ c: Context) -> [Check] {
         guard let ai = c.ai else { return [] }
         var found: [Check] = []
-        if let a = ai.total?.value, let s = slip.total, abs(a - s) > sumTolerance {
-            found.append(Check(code: Code.aiDisagreesTotal, severity: .warning, values: [.money(a, currency: slip.currency)]))
+        // A reading whose own amounts do not add up says nothing about the total. When the slip's
+        // amounts add up, a different total is only information.
+        if let a = ai.total?.value, let s = slip.total, abs(a - s) > sumTolerance, AIMerge.selfConsistent(ai) {
+            let severity: CheckSeverity = AIMerge.addsUp(slip) ? .info : .warning
+            found.append(Check(code: Code.aiDisagreesTotal, severity: severity, values: [.money(a, currency: slip.currency)]))
         }
         if let a = ai.date?.value, let s = slip.txnDate, a != s {
             found.append(Check(code: Code.aiDisagreesDate, severity: .info, values: [.day(a)]))

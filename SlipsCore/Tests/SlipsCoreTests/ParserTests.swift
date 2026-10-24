@@ -154,6 +154,30 @@ extension Extraction {
         #expect(d("31/02/2026") == nil)
     }
 
+    @Test func yearFirstTwoDigitDatesUseTheReferenceDay() {
+        let ref = CalendarDay(year: 2026, month: 10, day: 24)
+        // 26/10/20: 26 Oct 2020 (DD/MM/YY) or 20 Oct 2026 (YY/MM/DD); the scan was in Oct 2026.
+        let r = SlipParser.date(in: "26/10/20 17:48:24", today: ref)
+        #expect(r?.0.iso == "2026-10-20")
+        #expect((r?.1 ?? 0) >= 0.6)
+        // Readings far apart from the reference both ways stay low-confidence.
+        #expect((SlipParser.date(in: "05/06/2026", today: ref)?.1 ?? 1) < 0.6)
+    }
+
+    @Test func referenceDayFromFileNames() {
+        #expect(SlipParser.referenceDay(fromFileName: "Adobe Scan 20 oct. 2026 (2).pdf")?.iso == "2026-10-20")
+        #expect(SlipParser.referenceDay(fromFileName: "IMG_20261020_174812.jpg")?.iso == "2026-10-20")
+        #expect(SlipParser.referenceDay(fromFileName: "Scan 2026-10-20.pdf")?.iso == "2026-10-20")
+        #expect(SlipParser.referenceDay(fromFileName: "October 20, 2026.png")?.iso == "2026-10-20")
+        #expect(SlipParser.referenceDay(fromFileName: "receipt.pdf") == nil)
+    }
+
+    @Test func groupedGSTNumber() {
+        let rows = OCRRow.rows(from: [OCRLine(text: "TPS # 12345-6789 RT0001", box: .init(x: 0, y: 0, width: 1, height: 0.02))])
+            .map(SlipParser.Row.init)
+        #expect(SlipParser.gstNumber(rows)?.value == "123456789 RT0001")
+    }
+
     @Test func futureReadingLoses() {
         let today = CalendarDay(year: 2026, month: 10, day: 23)
         // 03/11/2026: 3 November (future) or 11 March (past) → March.

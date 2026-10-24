@@ -61,6 +61,32 @@ func field<V>(_ v: V, _ c: Double = 0.9) -> ExtractedField<V> { ExtractedField(v
         #expect(filled.isEmpty)
     }
 
+    @Test func taxesNotPrintedStayZero() {
+        // The parser read subtotal = total and no tax: zero-rated groceries.
+        var draft = parsed(total: 2398)
+        draft.subtotal = 2398
+        var ai = AIExtraction()
+        ai.gst = field(120)
+        ai.qst = field(243)
+        ai.total = field(2761)
+        ai.date = field(CalendarDay(year: 2026, month: 10, day: 20)!)
+        let (slip, filled) = AIMerge.merge(ai, into: draft)
+        #expect(slip.gst == nil && slip.qst == nil && slip.total == 2398)
+        #expect(filled == ["date"])
+    }
+
+    @Test func amountsThatKeepTheSlipConsistentAreTaken() {
+        var draft = parsed(total: nil)
+        draft.subtotal = 1000
+        var ai = AIExtraction()
+        ai.gst = field(50)
+        ai.qst = field(100)
+        ai.total = field(1150)
+        let (slip, filled) = AIMerge.merge(ai, into: draft)
+        #expect(slip.total == 1150 && slip.gst == 50 && slip.qst == 100)
+        #expect(Set(filled) == ["gst", "qst", "total"])
+    }
+
     @Test func sanitizedDropsWhatAnAssistantMayNotSay() {
         var ai = AIExtraction()
         ai.subcategoryKey = field("personal.casino")
@@ -98,10 +124,24 @@ func field<V>(_ v: V, _ c: Double = 0.9) -> ExtractedField<V> { ExtractedField(v
     @Test func total() {
         var ai = AIExtraction()
         ai.total = field(2900)
+        // The slip adds up (no subtotal to contradict it): a different reading is information.
         let check = SlipChecks.run(slip, context: .init(today: today, ai: ai)).first { $0.code == "ai_disagrees_total" }
-        #expect(check?.severity == .warning)
+        #expect(check?.severity == .info)
         #expect(check?.values == [.money(2900, currency: "CAD")])
+        // A slip that does not add up: the reading is a warning.
+        var broken = slip
+        broken.subtotal = 1500
+        #expect(SlipChecks.run(broken, context: .init(today: today, ai: ai)).first { $0.code == "ai_disagrees_total" }?.severity == .warning)
         ai.total = field(2301)
+        #expect(!codes(slip, ai).contains("ai_disagrees_total"))
+    }
+
+    @Test func aReadingThatContradictsItselfIsIgnored() {
+        var ai = AIExtraction()
+        ai.subtotal = field(2398)
+        ai.gst = field(120)
+        ai.qst = field(239)
+        ai.total = field(2651) // 2398 + 120 + 239 = 2757
         #expect(!codes(slip, ai).contains("ai_disagrees_total"))
     }
 
