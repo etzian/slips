@@ -73,7 +73,7 @@ Passed verbatim to every `etzian:phase-runner` subagent. Repo rules also apply: 
 | P4 | Endpoint settings, consent, masking, data map | done |
 | P5 | Ollama adapter (LAN) | done |
 | P6 | Claude API adapter | done |
-| P7 | OpenAI (ChatGPT) API adapter | pending |
+| P7 | OpenAI (ChatGPT) API adapter | done |
 | P8 | Evaluation harness and model choice | pending |
 | P9 | Polish: fr-CA parity, docs, legal assessment, v0.0.2 | pending |
 
@@ -177,3 +177,16 @@ Gate steps 1, 3, 4, 5 exit 0 (170 core tests). App sources parse-checked only.
 - DECISIONS: Structured outputs instead of a forced tool: the answer is constrained JSON, nothing else. No `temperature` (refused under this API version). 401 → `unauthorized`; 429, 5xx, 529 → `http(status)`, not retried (the slip keeps its on-device reading; the user can ask again); `stop_reason` `refusal` or `max_tokens` → `badAnswer`. Default model `claude-haiku-5-5` until P8; a model typed in the settings wins.
 - DEFERRED: none
 - MANUAL: with your own Anthropic API key: Settings › Privacy › AI › Online AI › Claude, paste the key, agree, then "Ask the online AI" on a slip (costs a fraction of a cent per slip)
+
+### P7 — OpenAI (ChatGPT) API adapter · pass (Linux; Mac gate to confirm) · 2026-10-24
+
+Gate steps 1, 3, 4, 5 exit 0 (173 core tests). App sources parse-checked only.
+
+- CHANGED: core `AI/OpenAIAssistant.swift` (raw HTTP: `POST /v1/responses`, `Authorization: Bearer`;
+  `instructions` = the shared instructions, `input` = the masked text; `text.format` strict JSON schema
+  `slip_reading`; `reasoning.effort: low`; `store: false`); `OpenAITests.swift` (`FakeResponsesAPI`:
+  header, request shape, text only, masking, no temperature, strict schema, refusal part, `incomplete`,
+  401/429/503, missing key sends nothing, user model); app factory builds it when a key is saved
+- DECISIONS: Responses API rather than Chat Completions (current API; `store: false` so OpenAI keeps no stored response). Prompt caching is automatic on OpenAI for a repeated prefix: nothing to mark. Error mapping as P6: 401 → `unauthorized`, other non-2xx → `http(status)` (429 also covers an empty quota), no retry; `incomplete` or a `refusal` part → `badAnswer`. Default model `gpt-5-mini` until P8; a model typed in the settings wins.
+- DEFERRED: none
+- MANUAL: with your own OpenAI API key: Settings › Privacy › AI › Online AI › OpenAI, paste the key, agree, then "Ask the online AI" on a slip

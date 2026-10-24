@@ -2,7 +2,7 @@ import Foundation
 import SlipsCore
 
 /// Builds the endpoint adapter for a profile's consented settings (M2 P5–P7: Ollama, Claude, OpenAI). The router has already
-/// checked consent and scope; a provider without an adapter yet returns nil, so nothing is sent.
+/// checked consent and scope; a provider without a saved key returns nil, so nothing is sent.
 enum EndpointAssistants {
     @Sendable static func make(_ settings: AIEndpointSettings) -> (any ExtractionAssistant)? {
         switch settings.provider {
@@ -13,7 +13,11 @@ enum EndpointAssistants {
             key(settings).flatMap { key in
                 key.isEmpty ? nil : ClaudeAssistant(model: model(settings), apiKey: key, transport: transport)
             }
-        case .off, .openai:
+        case .openai:
+            key(settings).flatMap { key in
+                key.isEmpty ? nil : OpenAIAssistant(model: model(settings), apiKey: key, transport: transport)
+            }
+        case .off:
             nil
         }
     }
